@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Candidate extends Model
+class Vote extends Model
 {
     use HasFactory;
 
@@ -15,11 +15,9 @@ class Candidate extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'description',
-        'member_since',
-        'photo',
-        'status',
+        'vote_token_id',
+        'election_id',
+        'candidate_id',
     ];
 
     /**
@@ -36,12 +34,26 @@ class Candidate extends Model
     }
 
     /**
-     * Get the elections for the candidate.
+     * Get the token that owns the vote.
      */
-    public function elections()
+    public function voteToken()
     {
-        return $this->belongsToMany(Election::class, 'candidate_elections')
-            ->withPivot('vote_count')
-            ->withTimestamps();
+        return $this->belongsTo(VoteToken::class);
+    }
+
+    /**
+     * Get the election that owns the vote.
+     */
+    public function election()
+    {
+        return $this->belongsTo(Election::class);
+    }
+
+    /**
+     * Get the candidate that was voted for.
+     */
+    public function candidate()
+    {
+        return $this->belongsTo(Candidate::class);
     }
 }
