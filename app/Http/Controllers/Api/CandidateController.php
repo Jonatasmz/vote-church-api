@@ -15,7 +15,7 @@ class CandidateController extends Controller
      */
     public function index()
     {
-        $candidates = Candidate::orderBy('created_at', 'desc')->get();
+        $candidates = Candidate::orderBy('name', 'asc')->get();
 
         return response()->json([
             'success' => true,
