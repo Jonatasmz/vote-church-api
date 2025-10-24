@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('name')->after('id');
             $table->text('description')->nullable()->after('name');
             $table->string('member_since', 4)->after('description');
-            $table->string('photo')->nullable()->after('member_since');
+            $table->text('photo')->nullable()->after('member_since');
             $table->enum('status', ['active', 'inactive'])->default('active')->after('photo');
         });
     }
