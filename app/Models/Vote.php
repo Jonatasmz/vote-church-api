@@ -16,6 +16,7 @@ class Vote extends Model
      */
     protected $fillable = [
         'vote_token_id',
+        'member_id',
         'election_id',
         'candidate_id',
     ];
@@ -55,5 +56,13 @@ class Vote extends Model
     public function candidate()
     {
         return $this->belongsTo(Candidate::class);
+    }
+
+    /**
+     * Get the member that voted.
+     */
+    public function member()
+    {
+        return $this->belongsTo(Member::class);
     }
 }

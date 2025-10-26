@@ -17,6 +17,8 @@ class Member extends Model
      */
     protected $fillable = [
         'name',
+        'cpf',
+        'rg',
         'description',
         'member_since',
         'photo',
@@ -31,8 +33,17 @@ class Member extends Model
     protected function casts(): array
     {
         return [
+            'member_since' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Prepare the member_since date for serialization.
+     */
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d');
     }
 }

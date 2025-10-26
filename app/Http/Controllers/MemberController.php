@@ -11,13 +11,34 @@ class MemberController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $members = Member::orderBy('name')->get();
+        $perPage = $request->input('per_page', 15);
+        $search = $request->input('search', '');
+        
+        $query = Member::query()->orderBy('name');
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('cpf', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        $members = $query->paginate($perPage);
         
         return response()->json([
             'success' => true,
-            'data' => $members
+            'data' => $members->items(),
+            'pagination' => [
+                'current_page' => $members->currentPage(),
+                'per_page' => $members->perPage(),
+                'total' => $members->total(),
+                'last_page' => $members->lastPage(),
+                'from' => $members->firstItem(),
+                'to' => $members->lastItem(),
+            ]
         ]);
     }
 
@@ -28,8 +49,10 @@ class MemberController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'cpf' => 'nullable|string|max:14',
+            'rg' => 'nullable|string|max:20',
             'description' => 'nullable|string',
-            'member_since' => 'required|string|size:4',
+            'member_since' => 'required|date',
             'photo' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ]);
@@ -69,8 +92,10 @@ class MemberController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
+            'cpf' => 'nullable|string|max:14',
+            'rg' => 'nullable|string|max:20',
             'description' => 'nullable|string',
-            'member_since' => 'sometimes|required|string|size:4',
+            'member_since' => 'sometimes|required|date',
             'photo' => 'nullable|string',
             'status' => 'sometimes|required|in:active,inactive',
         ]);
@@ -102,6 +127,59 @@ class MemberController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Membro removido com sucesso'
+        ]);
+    }
+
+    /**
+     * Validate if CPF exists in database.
+     */
+    public function validateCpf(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'cpf' => 'required|string',
+            'election_id' => 'nullable|integer|exists:elections,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'CPF é obrigatório',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Remover formatação do CPF (pontos e traço)
+        $cpf = preg_replace('/[^0-9]/', '', $request->cpf);
+
+        // Buscar membro pelo CPF (com ou sem formatação)
+        $member = Member::where(function($query) use ($cpf, $request) {
+            $query->where('cpf', $request->cpf)
+                  ->orWhere('cpf', $cpf);
+        })->first();
+
+        if (!$member) {
+            return response()->json([
+                'success' => false,
+                'message' => 'CPF não encontrado na base de dados'
+            ], 404);
+        }
+
+        // Verificar se já votou na eleição específica (se fornecida)
+        $hasVoted = false;
+        if ($request->election_id) {
+            $hasVoted = \App\Models\Vote::where('member_id', $member->id)
+                ->where('election_id', $request->election_id)
+                ->exists();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'CPF válido',
+            'data' => [
+                'member_id' => $member->id,
+                'name' => $member->name,
+                'has_voted' => $hasVoted
+            ]
         ]);
     }
 }

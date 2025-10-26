@@ -16,7 +16,9 @@ Route::post('auth/register', [AuthController::class, 'register']);
 
 // Rotas públicas de votação (não requerem autenticação)
 Route::post('tokens/validate', [VoteTokenController::class, 'validate']);
+Route::post('members/validate-cpf', [MemberController::class, 'validateCpf']);
 Route::post('vote', [VoteController::class, 'store']);
+Route::post('vote-by-cpf', [VoteController::class, 'storeByCpf']);
 
 // Rotas protegidas por autenticação JWT
 Route::middleware('auth:api')->group(function () {
