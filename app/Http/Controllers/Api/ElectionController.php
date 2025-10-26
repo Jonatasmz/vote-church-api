@@ -14,7 +14,7 @@ class ElectionController extends Controller
      */
     public function index()
     {
-        $elections = Election::with('candidates')
+        $elections = Election::with('members')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -36,21 +36,21 @@ class ElectionController extends Controller
             'status' => ['required', Rule::in(['draft', 'active', 'finished', 'cancelled'])],
             'max_votes' => ['required', 'integer', 'min:1'],
             'seats_available' => ['required', 'integer', 'min:1'],
-            'candidate_ids' => ['nullable', 'array'],
-            'candidate_ids.*' => ['exists:candidates,id'],
+            'member_ids' => ['nullable', 'array'],
+            'member_ids.*' => ['exists:members,id'],
         ]);
 
-        $candidateIds = $validated['candidate_ids'] ?? [];
-        unset($validated['candidate_ids']);
+        $memberIds = $validated['member_ids'] ?? [];
+        unset($validated['member_ids']);
 
         $election = Election::create($validated);
 
-        // Vincular candidatos se fornecidos
-        if (!empty($candidateIds)) {
-            $election->candidates()->attach($candidateIds);
+        // Vincular membros como candidatos se fornecidos
+        if (!empty($memberIds)) {
+            $election->members()->attach($memberIds);
         }
 
-        $election->load('candidates');
+        $election->load('members');
 
         return response()->json([
             'success' => true,
@@ -64,7 +64,7 @@ class ElectionController extends Controller
      */
     public function show(string $id)
     {
-        $election = Election::with('candidates')->findOrFail($id);
+        $election = Election::with('members')->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -86,20 +86,20 @@ class ElectionController extends Controller
             'status' => ['sometimes', 'required', Rule::in(['draft', 'active', 'finished', 'cancelled'])],
             'max_votes' => ['sometimes', 'required', 'integer', 'min:1'],
             'seats_available' => ['sometimes', 'required', 'integer', 'min:1'],
-            'candidate_ids' => ['nullable', 'array'],
-            'candidate_ids.*' => ['exists:candidates,id'],
+            'member_ids' => ['nullable', 'array'],
+            'member_ids.*' => ['exists:members,id'],
         ]);
 
-        if (isset($validated['candidate_ids'])) {
-            $candidateIds = $validated['candidate_ids'];
-            unset($validated['candidate_ids']);
+        if (isset($validated['member_ids'])) {
+            $memberIds = $validated['member_ids'];
+            unset($validated['member_ids']);
             
-            // Sincronizar candidatos
-            $election->candidates()->sync($candidateIds);
+            // Sincronizar membros como candidatos
+            $election->members()->sync($memberIds);
         }
 
         $election->update($validated);
-        $election->load('candidates');
+        $election->load('members');
 
         return response()->json([
             'success' => true,
@@ -123,40 +123,40 @@ class ElectionController extends Controller
     }
 
     /**
-     * Add candidates to election.
+     * Add members as candidates to election.
      */
-    public function addCandidates(Request $request, string $id)
+    public function addMembers(Request $request, string $id)
     {
         $election = Election::findOrFail($id);
 
         $validated = $request->validate([
-            'candidate_ids' => ['required', 'array'],
-            'candidate_ids.*' => ['exists:candidates,id'],
+            'member_ids' => ['required', 'array'],
+            'member_ids.*' => ['exists:members,id'],
         ]);
 
-        // Sync vai substituir completamente os candidatos vinculados
-        $election->candidates()->sync($validated['candidate_ids']);
-        $election->load('candidates');
+        // Sync vai substituir completamente os membros vinculados como candidatos
+        $election->members()->sync($validated['member_ids']);
+        $election->load('members');
 
         return response()->json([
             'success' => true,
-            'message' => 'Candidatos vinculados com sucesso',
+            'message' => 'Membros vinculados como candidatos com sucesso',
             'data' => $election
         ]);
     }
 
     /**
-     * Remove candidate from election.
+     * Remove member (candidate) from election.
      */
-    public function removeCandidate(string $electionId, string $candidateId)
+    public function removeMember(string $electionId, string $memberId)
     {
         $election = Election::findOrFail($electionId);
-        $election->candidates()->detach($candidateId);
-        $election->load('candidates');
+        $election->members()->detach($memberId);
+        $election->load('members');
 
         return response()->json([
             'success' => true,
-            'message' => 'Candidato removido com sucesso',
+            'message' => 'Membro removido da eleição com sucesso',
             'data' => $election
         ]);
     }

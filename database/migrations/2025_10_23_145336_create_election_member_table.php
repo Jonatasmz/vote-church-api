@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('candidate_elections', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('candidate_id')->constrained()->onDelete('cascade');
+        Schema::create('election_member', function (Blueprint $table) {
             $table->foreignId('election_id')->constrained()->onDelete('cascade');
-            $table->integer('vote_count')->default(0);
+            $table->foreignId('member_id')->constrained()->onDelete('cascade');
             $table->timestamps();
             
-            // Garantir que um candidato não seja adicionado duas vezes à mesma eleição
-            $table->unique(['candidate_id', 'election_id']);
+            $table->primary(['election_id', 'member_id']);
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('candidate_elections');
+        Schema::dropIfExists('election_member');
     }
 };

@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('members', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('cpf', 14)->nullable()->unique();
+            $table->string('rg', 20)->nullable();
             $table->text('description')->nullable();
-            $table->string('member_since', 4);
+            $table->date('member_since')->nullable();
             $table->text('photo')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->softDeletes();

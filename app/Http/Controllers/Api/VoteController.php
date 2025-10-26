@@ -19,8 +19,8 @@ class VoteController extends Controller
     {
         $validated = $request->validate([
             'token' => ['required', 'string'],
-            'candidate_ids' => ['required', 'array', 'min:1'],
-            'candidate_ids.*' => ['integer', 'exists:candidates,id'],
+            'voted_member_ids' => ['required', 'array', 'min:1'],
+            'voted_member_ids.*' => ['integer', 'exists:members,id'],
         ]);
 
         // Buscar o token
@@ -50,7 +50,7 @@ class VoteController extends Controller
         $election = $voteToken->election;
 
         // Validar quantidade de votos
-        $voteCount = count($validated['candidate_ids']);
+        $voteCount = count($validated['voted_member_ids']);
         if ($voteCount > $election->max_votes) {
             return response()->json([
                 'success' => false,
@@ -58,11 +58,11 @@ class VoteController extends Controller
             ], 400);
         }
 
-        // Validar se os candidatos pertencem à eleição
-        $electionCandidateIds = $election->candidates()->pluck('candidates.id')->toArray();
-        $invalidCandidates = array_diff($validated['candidate_ids'], $electionCandidateIds);
+        // Validar se os membros (candidatos) pertencem à eleição
+        $electionMemberIds = $election->members()->pluck('members.id')->toArray();
+        $invalidMembers = array_diff($validated['voted_member_ids'], $electionMemberIds);
         
-        if (!empty($invalidCandidates)) {
+        if (!empty($invalidMembers)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Um ou mais candidatos não pertencem a esta eleição'
@@ -73,11 +73,11 @@ class VoteController extends Controller
         DB::beginTransaction();
         try {
             $votes = [];
-            foreach ($validated['candidate_ids'] as $candidateId) {
+            foreach ($validated['voted_member_ids'] as $votedMemberId) {
                 $vote = Vote::create([
                     'vote_token_id' => $voteToken->id,
                     'election_id' => $election->id,
-                    'candidate_id' => $candidateId,
+                    'voted_member_id' => $votedMemberId,
                 ]);
                 $votes[] = $vote;
             }
@@ -114,15 +114,15 @@ class VoteController extends Controller
         $election = Election::findOrFail($electionId);
 
         $stats = DB::table('votes')
-            ->join('candidates', 'votes.candidate_id', '=', 'candidates.id')
+            ->join('members', 'votes.voted_member_id', '=', 'members.id')
             ->where('votes.election_id', $electionId)
             ->select(
-                'candidates.id',
-                'candidates.name',
-                'candidates.photo',
+                'members.id',
+                'members.name',
+                'members.photo',
                 DB::raw('COUNT(*) as vote_count')
             )
-            ->groupBy('candidates.id', 'candidates.name', 'candidates.photo')
+            ->groupBy('members.id', 'members.name', 'members.photo')
             ->orderBy('vote_count', 'desc')
             ->get();
 
@@ -153,8 +153,8 @@ class VoteController extends Controller
         $validated = $request->validate([
             'cpf' => ['required', 'string'],
             'election_id' => ['required', 'integer', 'exists:elections,id'],
-            'candidate_ids' => ['required', 'array', 'min:1'],
-            'candidate_ids.*' => ['integer', 'exists:candidates,id'],
+            'voted_member_ids' => ['required', 'array', 'min:1'],
+            'voted_member_ids.*' => ['integer', 'exists:members,id'],
         ]);
 
         // Remover formatação do CPF
@@ -196,7 +196,7 @@ class VoteController extends Controller
         }
 
         // Validar quantidade de votos
-        $voteCount = count($validated['candidate_ids']);
+        $voteCount = count($validated['voted_member_ids']);
         if ($voteCount > $election->max_votes) {
             return response()->json([
                 'success' => false,
@@ -204,11 +204,11 @@ class VoteController extends Controller
             ], 400);
         }
 
-        // Validar se os candidatos pertencem à eleição
-        $electionCandidateIds = $election->candidates()->pluck('candidates.id')->toArray();
-        $invalidCandidates = array_diff($validated['candidate_ids'], $electionCandidateIds);
+        // Validar se os membros (candidatos) pertencem à eleição
+        $electionMemberIds = $election->members()->pluck('members.id')->toArray();
+        $invalidMembers = array_diff($validated['voted_member_ids'], $electionMemberIds);
         
-        if (!empty($invalidCandidates)) {
+        if (!empty($invalidMembers)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Um ou mais candidatos não pertencem a esta eleição'
@@ -219,11 +219,11 @@ class VoteController extends Controller
         DB::beginTransaction();
         try {
             $votes = [];
-            foreach ($validated['candidate_ids'] as $candidateId) {
+            foreach ($validated['voted_member_ids'] as $votedMemberId) {
                 $vote = Vote::create([
                     'member_id' => $member->id,
                     'election_id' => $election->id,
-                    'candidate_id' => $candidateId,
+                    'voted_member_id' => $votedMemberId,
                 ]);
                 $votes[] = $vote;
             }

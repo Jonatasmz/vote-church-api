@@ -41,12 +41,20 @@ class Election extends Model
     }
 
     /**
-     * Get the candidates for the election.
+     * Get the candidates (members) for the election.
      */
     public function candidates()
     {
-        return $this->belongsToMany(Candidate::class, 'candidate_elections')
-            ->withPivot('vote_count')
+        return $this->belongsToMany(Member::class, 'election_member')
+            ->withTimestamps();
+    }
+
+    /**
+     * Alias for candidates - returns members who are candidates
+     */
+    public function members()
+    {
+        return $this->belongsToMany(Member::class, 'election_member')
             ->withTimestamps();
     }
 

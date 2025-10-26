@@ -18,7 +18,7 @@ class Vote extends Model
         'vote_token_id',
         'member_id',
         'election_id',
-        'candidate_id',
+        'voted_member_id', // ID do membro que recebeu o voto (candidato)
     ];
 
     /**
@@ -51,18 +51,26 @@ class Vote extends Model
     }
 
     /**
-     * Get the candidate that was voted for.
+     * Get the candidate (member) that was voted for.
      */
     public function candidate()
     {
-        return $this->belongsTo(Candidate::class);
+        return $this->belongsTo(Member::class, 'voted_member_id');
     }
 
     /**
-     * Get the member that voted.
+     * Get the member that was voted for (candidate).
+     */
+    public function votedMember()
+    {
+        return $this->belongsTo(Member::class, 'voted_member_id');
+    }
+
+    /**
+     * Get the member that voted (voter).
      */
     public function member()
     {
-        return $this->belongsTo(Member::class);
+        return $this->belongsTo(Member::class, 'member_id');
     }
 }

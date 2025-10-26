@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\ElectionController;
 use App\Http\Controllers\Api\VoteTokenController;
 use App\Http\Controllers\Api\VoteController;
@@ -30,16 +29,13 @@ Route::middleware('auth:api')->group(function () {
     // Rotas de usuários
     Route::apiResource('users', UserController::class);
     
-    // Rotas de candidatos
-    Route::apiResource('candidates', CandidateController::class);
-    
     // Rotas de membros
     Route::apiResource('members', MemberController::class);
     
     // Rotas de eleições
     Route::apiResource('elections', ElectionController::class);
-    Route::post('elections/{election}/candidates', [ElectionController::class, 'addCandidates']);
-    Route::delete('elections/{election}/candidates/{candidate}', [ElectionController::class, 'removeCandidate']);
+    Route::post('elections/{election}/members', [ElectionController::class, 'addMembers']);
+    Route::delete('elections/{election}/members/{member}', [ElectionController::class, 'removeMember']);
     
     // Rotas de tokens (QR Codes)
     Route::get('elections/{election}/tokens', [VoteTokenController::class, 'index']);

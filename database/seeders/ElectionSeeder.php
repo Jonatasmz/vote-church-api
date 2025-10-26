@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Election;
-use App\Models\Candidate;
+use App\Models\Member;
 use Carbon\Carbon;
 
 class ElectionSeeder extends Seeder
@@ -15,11 +15,11 @@ class ElectionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Pegar IDs de candidatos disponíveis
-        $candidates = Candidate::pluck('id')->toArray();
+        // Pegar IDs de membros disponíveis
+        $members = Member::pluck('id')->toArray();
         
-        if (count($candidates) < 3) {
-            $this->command->warn('São necessários pelo menos 3 candidatos cadastrados. Execute o CandidateSeeder primeiro.');
+        if (count($members) < 3) {
+            $this->command->warn('São necessários pelo menos 3 membros cadastrados.');
             return;
         }
 
@@ -33,8 +33,8 @@ class ElectionSeeder extends Seeder
             'seats_available' => 5,
         ]);
 
-        // Vincular primeiros 3 candidatos
-        $election1->candidates()->attach(array_slice($candidates, 0, 3));
+        // Vincular primeiros 3 membros como candidatos
+        $election1->members()->attach(array_slice($members, 0, 3));
 
         // Eleição 2: Coordenação de Louvor (Rascunho - Futuro)
         $election2 = Election::create([
@@ -46,9 +46,9 @@ class ElectionSeeder extends Seeder
             'seats_available' => 1,
         ]);
 
-        // Vincular candidatos 2 e 4 (se existirem)
-        if (count($candidates) >= 4) {
-            $election2->candidates()->attach([$candidates[1], $candidates[3]]);
+        // Vincular membros 2 e 4 como candidatos (se existirem)
+        if (count($members) >= 4) {
+            $election2->members()->attach([$members[1], $members[3]]);
         }
 
         // Eleição 3: Liderança de Jovens (Rascunho - Futuro)
@@ -61,8 +61,8 @@ class ElectionSeeder extends Seeder
             'seats_available' => 2,
         ]);
 
-        // Vincular primeiros 2 candidatos
-        $election3->candidates()->attach(array_slice($candidates, 0, 2));
+        // Vincular primeiros 2 membros como candidatos
+        $election3->members()->attach(array_slice($members, 0, 2));
 
         // Eleição 4: Conselho Fiscal 2024 (Finalizada - Passado)
         $election4 = Election::create([
@@ -74,10 +74,7 @@ class ElectionSeeder extends Seeder
             'seats_available' => 3,
         ]);
 
-        // Vincular candidatos disponíveis com votos simulados
-        $voteCounts = [45, 38, 52, 41, 35];
-        foreach (array_slice($candidates, 0, min(4, count($candidates))) as $index => $candidateId) {
-            $election4->candidates()->attach($candidateId, ['vote_count' => $voteCounts[$index] ?? 30]);
-        }
+        // Vincular membros disponíveis como candidatos
+        $election4->members()->attach(array_slice($members, 0, min(4, count($members))));
     }
 }

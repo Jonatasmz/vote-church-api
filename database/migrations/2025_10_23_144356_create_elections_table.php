@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
+            $table->date('election_date');
             $table->enum('status', ['draft', 'active', 'finished', 'cancelled'])->default('draft');
-            $table->boolean('allow_multiple_votes')->default(false);
+            $table->integer('max_votes')->default(1);
+            $table->integer('seats_available')->default(1);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

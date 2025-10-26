@@ -130,7 +130,7 @@ class VoteTokenController extends Controller
             'success' => true,
             'data' => [
                 'token' => $voteToken,
-                'election' => $voteToken->election->load('candidates')
+                'election' => $voteToken->election->load('members')
             ]
         ]);
     }

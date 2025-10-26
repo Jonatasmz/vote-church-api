@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('votes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('vote_token_id')->constrained('vote_tokens')->onDelete('cascade');
+            $table->foreignId('vote_token_id')->nullable()->constrained('vote_tokens')->onDelete('cascade');
+            $table->foreignId('member_id')->nullable()->constrained('members')->onDelete('cascade');
             $table->foreignId('election_id')->constrained('elections')->onDelete('cascade');
-            $table->foreignId('candidate_id')->constrained('candidates')->onDelete('cascade');
+            $table->foreignId('voted_member_id')->constrained('members')->onDelete('cascade');
             $table->timestamps();
 
             // Um token pode votar em vários candidatos, mas não no mesmo candidato duas vezes
-            $table->unique(['vote_token_id', 'candidate_id']);
-            $table->index(['election_id', 'candidate_id']);
+            $table->index(['vote_token_id', 'voted_member_id']);
+            $table->index(['election_id', 'voted_member_id']);
+            $table->index(['member_id', 'election_id']);
         });
     }
 
