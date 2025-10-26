@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\ElectionController;
 use App\Http\Controllers\Api\VoteTokenController;
 use App\Http\Controllers\Api\VoteController;
+use App\Http\Controllers\MemberController;
 
 // Rotas públicas de autenticação
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -29,6 +30,9 @@ Route::middleware('auth:api')->group(function () {
     
     // Rotas de candidatos
     Route::apiResource('candidates', CandidateController::class);
+    
+    // Rotas de membros
+    Route::apiResource('members', MemberController::class);
     
     // Rotas de eleições
     Route::apiResource('elections', ElectionController::class);
