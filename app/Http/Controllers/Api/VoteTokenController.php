@@ -4,20 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\VoteToken;
-use App\Models\Election;
+use App\Models\TokenGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class VoteTokenController extends Controller
 {
     /**
-     * Display a listing of tokens for an election.
+     * Display a listing of tokens for a token group.
      */
-    public function index(string $electionId)
+    public function index(string $tokenGroupId)
     {
-        $election = Election::findOrFail($electionId);
+        $tokenGroup = TokenGroup::findOrFail($tokenGroupId);
         
-        $tokens = VoteToken::where('election_id', $electionId)
+        $tokens = VoteToken::where('token_group_id', $tokenGroupId)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -28,11 +28,11 @@ class VoteTokenController extends Controller
     }
 
     /**
-     * Generate tokens for an election.
+     * Generate tokens for a token group.
      */
-    public function store(Request $request, string $electionId)
+    public function store(Request $request, string $tokenGroupId)
     {
-        $election = Election::findOrFail($electionId);
+        $tokenGroup = TokenGroup::findOrFail($tokenGroupId);
 
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
@@ -41,7 +41,7 @@ class VoteTokenController extends Controller
         $tokens = [];
         for ($i = 0; $i < $validated['quantity']; $i++) {
             $token = VoteToken::create([
-                'election_id' => $electionId,
+                'token_group_id' => $tokenGroupId,
                 'token' => Str::random(32),
                 'used' => false,
             ]);
@@ -58,9 +58,9 @@ class VoteTokenController extends Controller
     /**
      * Display the specified token.
      */
-    public function show(string $electionId, string $id)
+    public function show(string $tokenGroupId, string $id)
     {
-        $token = VoteToken::where('election_id', $electionId)
+        $token = VoteToken::where('token_group_id', $tokenGroupId)
             ->findOrFail($id);
 
         return response()->json([
@@ -72,9 +72,9 @@ class VoteTokenController extends Controller
     /**
      * Remove the specified token.
      */
-    public function destroy(string $electionId, string $id)
+    public function destroy(string $tokenGroupId, string $id)
     {
-        $token = VoteToken::where('election_id', $electionId)
+        $token = VoteToken::where('token_group_id', $tokenGroupId)
             ->findOrFail($id);
 
         if ($token->used) {
@@ -93,7 +93,7 @@ class VoteTokenController extends Controller
     }
 
     /**
-     * Validate a token.
+     * Validate a token and return all active elections in its group.
      */
     public function validate(Request $request)
     {
@@ -102,7 +102,7 @@ class VoteTokenController extends Controller
         ]);
 
         $voteToken = VoteToken::where('token', $validated['token'])
-            ->with('election')
+            ->with('tokenGroup.elections.members')
             ->first();
 
         if (!$voteToken) {
@@ -122,7 +122,16 @@ class VoteTokenController extends Controller
         if (!$voteToken->isValid()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Esta eleição não está ativa'
+                'message' => 'Este grupo de tokens não está ativo ou expirou'
+            ], 400);
+        }
+
+        $activeElections = $voteToken->getActiveElections();
+
+        if ($activeElections->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não há eleições ativas para este token'
             ], 400);
         }
 
@@ -130,7 +139,8 @@ class VoteTokenController extends Controller
             'success' => true,
             'data' => [
                 'token' => $voteToken,
-                'election' => $voteToken->election->load('members')
+                'token_group' => $voteToken->tokenGroup,
+                'elections' => $activeElections
             ]
         ]);
     }

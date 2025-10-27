@@ -19,8 +19,10 @@ class VoteController extends Controller
     {
         $validated = $request->validate([
             'token' => ['required', 'string'],
-            'voted_member_ids' => ['required', 'array', 'min:1'],
-            'voted_member_ids.*' => ['integer', 'exists:members,id'],
+            'votes' => ['required', 'array', 'min:1'],
+            'votes.*.election_id' => ['required', 'integer', 'exists:elections,id'],
+            'votes.*.voted_member_ids' => ['required', 'array', 'min:1'],
+            'votes.*.voted_member_ids.*' => ['integer', 'exists:members,id'],
         ]);
 
         // Buscar o token
@@ -43,43 +45,83 @@ class VoteController extends Controller
         if (!$voteToken->isValid()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Esta eleição não está ativa'
+                'message' => 'Este grupo de tokens não está ativo ou expirou'
             ], 400);
         }
 
-        $election = $voteToken->election;
+        // Obter eleições ativas do grupo do token
+        $activeElections = $voteToken->getActiveElections();
+        $activeElectionIds = $activeElections->pluck('id')->toArray();
 
-        // Validar quantidade de votos
-        $voteCount = count($validated['voted_member_ids']);
-        if ($voteCount > $election->max_votes) {
-            return response()->json([
-                'success' => false,
-                'message' => "Você pode votar em no máximo {$election->max_votes} candidato(s)"
-            ], 400);
-        }
-
-        // Validar se os membros (candidatos) pertencem à eleição
-        $electionMemberIds = $election->members()->pluck('members.id')->toArray();
-        $invalidMembers = array_diff($validated['voted_member_ids'], $electionMemberIds);
+        // Validar que todas as eleições pertencem ao grupo do token
+        $requestedElectionIds = collect($validated['votes'])->pluck('election_id')->toArray();
+        $invalidElectionIds = array_diff($requestedElectionIds, $activeElectionIds);
         
-        if (!empty($invalidMembers)) {
+        if (!empty($invalidElectionIds)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Um ou mais candidatos não pertencem a esta eleição'
+                'message' => 'Uma ou mais eleições não pertencem ao grupo deste token ou não estão ativas'
+            ], 400);
+        }
+
+        // Verificar se já votou em alguma das eleições com este token
+        $alreadyVoted = Vote::where('vote_token_id', $voteToken->id)
+            ->whereIn('election_id', $requestedElectionIds)
+            ->exists();
+
+        if ($alreadyVoted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este token já foi utilizado para votar em uma ou mais destas eleições'
             ], 400);
         }
 
         // Registrar os votos em uma transação
         DB::beginTransaction();
         try {
-            $votes = [];
-            foreach ($validated['voted_member_ids'] as $votedMemberId) {
-                $vote = Vote::create([
-                    'vote_token_id' => $voteToken->id,
+            $totalVotesRegistered = 0;
+            $electionResults = [];
+
+            foreach ($validated['votes'] as $voteData) {
+                $election = Election::findOrFail($voteData['election_id']);
+
+                // Validar quantidade de votos para esta eleição
+                $voteCount = count($voteData['voted_member_ids']);
+                if ($voteCount > $election->max_votes) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Para a eleição '{$election->title}', você pode votar em no máximo {$election->max_votes} candidato(s)"
+                    ], 400);
+                }
+
+                // Validar se os membros (candidatos) pertencem à eleição
+                $electionMemberIds = $election->members()->pluck('members.id')->toArray();
+                $invalidMembers = array_diff($voteData['voted_member_ids'], $electionMemberIds);
+                
+                if (!empty($invalidMembers)) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Um ou mais candidatos não pertencem à eleição '{$election->title}'"
+                    ], 400);
+                }
+
+                // Registrar votos desta eleição
+                foreach ($voteData['voted_member_ids'] as $votedMemberId) {
+                    Vote::create([
+                        'vote_token_id' => $voteToken->id,
+                        'election_id' => $election->id,
+                        'voted_member_id' => $votedMemberId,
+                    ]);
+                    $totalVotesRegistered++;
+                }
+
+                $electionResults[] = [
                     'election_id' => $election->id,
-                    'voted_member_id' => $votedMemberId,
-                ]);
-                $votes[] = $vote;
+                    'election_title' => $election->title,
+                    'votes_count' => count($voteData['voted_member_ids'])
+                ];
             }
 
             // Marcar token como usado
@@ -89,9 +131,10 @@ class VoteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Voto(s) registrado(s) com sucesso',
+                'message' => 'Voto(s) registrado(s) com sucesso em todas as eleições',
                 'data' => [
-                    'votes_count' => count($votes),
+                    'total_votes' => $totalVotesRegistered,
+                    'elections' => $electionResults,
                     'token_used' => true
                 ]
             ], 201);
@@ -111,7 +154,7 @@ class VoteController extends Controller
      */
     public function statistics(string $electionId)
     {
-        $election = Election::findOrFail($electionId);
+        $election = Election::with('tokenGroups')->findOrFail($electionId);
 
         $stats = DB::table('votes')
             ->join('members', 'votes.voted_member_id', '=', 'members.id')
@@ -126,8 +169,15 @@ class VoteController extends Controller
             ->orderBy('vote_count', 'desc')
             ->get();
 
-        $totalTokens = VoteToken::where('election_id', $electionId)->count();
-        $usedTokens = VoteToken::where('election_id', $electionId)->where('used', true)->count();
+        // Obter total de tokens dos grupos vinculados a esta eleição
+        $totalTokens = 0;
+        $usedTokens = 0;
+        
+        foreach ($election->tokenGroups as $tokenGroup) {
+            $totalTokens += $tokenGroup->getTotalTokensCount();
+            $usedTokens += $tokenGroup->getUsedTokensCount();
+        }
+
         $totalVotes = Vote::where('election_id', $electionId)->count();
 
         return response()->json([

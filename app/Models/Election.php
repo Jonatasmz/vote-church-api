@@ -59,11 +59,12 @@ class Election extends Model
     }
 
     /**
-     * Get the vote tokens for the election.
+     * Get the token groups associated with the election.
      */
-    public function voteTokens()
+    public function tokenGroups()
     {
-        return $this->hasMany(VoteToken::class);
+        return $this->belongsToMany(TokenGroup::class, 'election_token_group')
+            ->withTimestamps();
     }
 
     /**

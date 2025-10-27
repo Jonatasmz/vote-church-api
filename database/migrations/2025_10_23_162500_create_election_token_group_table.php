@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vote_tokens', function (Blueprint $table) {
+        Schema::create('election_token_group', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('election_id')->constrained('elections')->onDelete('cascade');
             $table->foreignId('token_group_id')->constrained('token_groups')->onDelete('cascade');
-            $table->string('token', 64)->unique(); // Hash único do QR Code
-            $table->boolean('used')->default(false);
-            $table->timestamp('used_at')->nullable();
             $table->timestamps();
 
-            $table->index(['token_group_id', 'used']);
+            $table->unique(['election_id', 'token_group_id']);
+            $table->index('token_group_id');
         });
     }
 
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vote_tokens');
+        Schema::dropIfExists('election_token_group');
     }
 };

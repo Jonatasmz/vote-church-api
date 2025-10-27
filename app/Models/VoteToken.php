@@ -15,7 +15,7 @@ class VoteToken extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'election_id',
+        'token_group_id',
         'token',
         'used',
         'used_at',
@@ -37,11 +37,11 @@ class VoteToken extends Model
     }
 
     /**
-     * Get the election that owns the token.
+     * Get the token group that owns the token.
      */
-    public function election()
+    public function tokenGroup()
     {
-        return $this->belongsTo(Election::class);
+        return $this->belongsTo(TokenGroup::class);
     }
 
     /**
@@ -64,10 +64,22 @@ class VoteToken extends Model
     }
 
     /**
-     * Check if token is valid (not used and belongs to an active election).
+     * Check if token is valid (not used and belongs to an active token group).
      */
     public function isValid(): bool
     {
-        return !$this->used && $this->election->isActive();
+        return !$this->used && $this->tokenGroup && $this->tokenGroup->isValid();
+    }
+
+    /**
+     * Get all active elections for this token.
+     */
+    public function getActiveElections()
+    {
+        if (!$this->tokenGroup) {
+            return collect();
+        }
+
+        return $this->tokenGroup->getActiveElections();
     }
 }

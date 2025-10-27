@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ElectionController;
 use App\Http\Controllers\Api\VoteTokenController;
 use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\TokenGroupController;
 
 // Rotas públicas de autenticação
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -39,11 +40,17 @@ Route::middleware('auth:api')->group(function () {
     Route::post('elections/{election}/members', [ElectionController::class, 'addMembers']);
     Route::delete('elections/{election}/members/{member}', [ElectionController::class, 'removeMember']);
     
-    // Rotas de tokens (QR Codes)
-    Route::get('elections/{election}/tokens', [VoteTokenController::class, 'index']);
-    Route::post('elections/{election}/tokens', [VoteTokenController::class, 'store']);
-    Route::get('elections/{election}/tokens/{token}', [VoteTokenController::class, 'show']);
-    Route::delete('elections/{election}/tokens/{token}', [VoteTokenController::class, 'destroy']);
+    // Rotas de grupos de tokens
+    Route::apiResource('token-groups', TokenGroupController::class);
+    Route::get('token-groups/{tokenGroup}/active-elections', [TokenGroupController::class, 'getActiveElections']);
+    Route::post('token-groups/{tokenGroup}/attach-elections', [TokenGroupController::class, 'attachElections']);
+    Route::post('token-groups/{tokenGroup}/detach-elections', [TokenGroupController::class, 'detachElections']);
+    
+    // Rotas de tokens (QR Codes) - agora vinculados a grupos
+    Route::get('token-groups/{tokenGroup}/tokens', [VoteTokenController::class, 'index']);
+    Route::post('token-groups/{tokenGroup}/tokens', [VoteTokenController::class, 'store']);
+    Route::get('token-groups/{tokenGroup}/tokens/{token}', [VoteTokenController::class, 'show']);
+    Route::delete('token-groups/{tokenGroup}/tokens/{token}', [VoteTokenController::class, 'destroy']);
     
     // Rotas de estatísticas
     Route::get('elections/{election}/statistics', [VoteController::class, 'statistics']);
