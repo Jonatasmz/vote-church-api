@@ -73,6 +73,38 @@ class ElectionController extends Controller
     }
 
     /**
+     * Display the specified resource for public voting (without authentication).
+     */
+    public function showPublic(string $id)
+    {
+        $election = Election::with('members')
+            ->where('id', $id)
+            ->whereIn('status', ['active']) // Apenas eleições ativas
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => $election
+        ]);
+    }
+
+    /**
+     * List active elections for public access (without authentication).
+     */
+    public function activePublic()
+    {
+        $elections = Election::with('members')
+            ->where('status', 'active')
+            ->orderBy('election_date', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $elections
+        ]);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)

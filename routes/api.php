@@ -14,6 +14,8 @@ Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('auth/register', [AuthController::class, 'register']);
 
 // Rotas públicas de votação (não requerem autenticação)
+Route::get('elections/active/public', [ElectionController::class, 'activePublic']);
+Route::get('elections/{election}/public', [ElectionController::class, 'showPublic']);
 Route::post('tokens/validate', [VoteTokenController::class, 'validate']);
 Route::post('members/validate-cpf', [MemberController::class, 'validateCpf']);
 Route::post('vote', [VoteController::class, 'store']);
