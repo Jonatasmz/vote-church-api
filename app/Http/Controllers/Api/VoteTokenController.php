@@ -135,12 +135,33 @@ class VoteTokenController extends Controller
             ], 400);
         }
 
+        // Buscar eleições em que já votou com este token
+        $votedElectionIds = \App\Models\Vote::where('vote_token_id', $voteToken->id)
+            ->distinct('election_id')
+            ->pluck('election_id')
+            ->toArray();
+
+        // Filtrar apenas eleições que ainda não foram votadas
+        $pendingElections = $activeElections->filter(function ($election) use ($votedElectionIds) {
+            return !in_array($election->id, $votedElectionIds);
+        })->values();
+
+        // Se não há eleições pendentes, mas há votos registrados, token foi totalmente usado
+        if ($pendingElections->isEmpty() && !empty($votedElectionIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Você já votou em todas as eleições disponíveis com este token'
+            ], 400);
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
                 'token' => $voteToken,
                 'token_group' => $voteToken->tokenGroup,
-                'elections' => $activeElections
+                'elections' => $pendingElections,
+                'voted_elections_count' => count($votedElectionIds),
+                'total_elections_count' => $activeElections->count()
             ]
         ]);
     }
