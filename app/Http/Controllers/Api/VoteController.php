@@ -72,7 +72,7 @@ class VoteController extends Controller
         if ($alreadyVoted) {
             return response()->json([
                 'success' => false,
-                'message' => 'Este token já foi utilizado para votar em uma ou mais destas eleições'
+                'message' => 'Você já votou nesta eleição com este token'
             ], 400);
         }
 
@@ -124,18 +124,30 @@ class VoteController extends Controller
                 ];
             }
 
-            // Marcar token como usado
-            $voteToken->markAsUsed();
+            // Verificar quantas eleições já foram votadas
+            $votedElectionsCount = Vote::where('vote_token_id', $voteToken->id)
+                ->distinct('election_id')
+                ->count('election_id');
+
+            // Marcar token como usado APENAS se votou em TODAS as eleições do grupo
+            $totalElectionsInGroup = count($activeElectionIds);
+            $tokenFullyUsed = false;
+            
+            if ($votedElectionsCount >= $totalElectionsInGroup) {
+                $voteToken->markAsUsed();
+                $tokenFullyUsed = true;
+            }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Voto(s) registrado(s) com sucesso em todas as eleições',
+                'message' => 'Voto(s) registrado(s) com sucesso',
                 'data' => [
                     'total_votes' => $totalVotesRegistered,
                     'elections' => $electionResults,
-                    'token_used' => true
+                    'token_used' => $tokenFullyUsed,
+                    'remaining_elections' => $totalElectionsInGroup - $votedElectionsCount
                 ]
             ], 201);
 
