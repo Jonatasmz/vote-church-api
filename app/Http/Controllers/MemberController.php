@@ -164,12 +164,16 @@ class MemberController extends Controller
             ], 404);
         }
 
-        // Verificar se já votou na eleição específica (se fornecida)
+        // Buscar todas as eleições em que já votou
+        $votedElectionIds = \App\Models\Vote::where('member_id', $member->id)
+            ->distinct('election_id')
+            ->pluck('election_id')
+            ->toArray();
+
+        // Para compatibilidade com código antigo, verificar eleição específica
         $hasVoted = false;
         if ($request->election_id) {
-            $hasVoted = \App\Models\Vote::where('member_id', $member->id)
-                ->where('election_id', $request->election_id)
-                ->exists();
+            $hasVoted = in_array($request->election_id, $votedElectionIds);
         }
 
         return response()->json([
@@ -178,7 +182,8 @@ class MemberController extends Controller
             'data' => [
                 'member_id' => $member->id,
                 'name' => $member->name,
-                'has_voted' => $hasVoted
+                'has_voted' => $hasVoted,
+                'voted_elections' => $votedElectionIds
             ]
         ]);
     }
