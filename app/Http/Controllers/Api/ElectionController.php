@@ -166,13 +166,46 @@ class ElectionController extends Controller
             'member_ids.*' => ['exists:members,id'],
         ]);
 
-        // Sync vai substituir completamente os membros vinculados como candidatos
-        $election->members()->sync($validated['member_ids']);
+        // Sync com ordem baseada na posição no array
+        $syncData = [];
+        foreach ($validated['member_ids'] as $index => $memberId) {
+            $syncData[$memberId] = ['order' => $index];
+        }
+        
+        $election->members()->sync($syncData);
         $election->load('members');
 
         return response()->json([
             'success' => true,
             'message' => 'Membros vinculados como candidatos com sucesso',
+            'data' => $election
+        ]);
+    }
+
+    /**
+     * Update the order of candidates in election.
+     */
+    public function updateMembersOrder(Request $request, string $id)
+    {
+        $election = Election::findOrFail($id);
+
+        $validated = $request->validate([
+            'member_ids' => ['required', 'array'],
+            'member_ids.*' => ['exists:members,id'],
+        ]);
+
+        // Atualizar ordem baseada na posição no array
+        $syncData = [];
+        foreach ($validated['member_ids'] as $index => $memberId) {
+            $syncData[$memberId] = ['order' => $index];
+        }
+        
+        $election->members()->sync($syncData);
+        $election->load('members');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ordem dos candidatos atualizada com sucesso',
             'data' => $election
         ]);
     }

@@ -38,6 +38,7 @@ Route::middleware('auth:api')->group(function () {
     // Rotas de eleições
     Route::apiResource('elections', ElectionController::class);
     Route::post('elections/{election}/members', [ElectionController::class, 'addMembers']);
+    Route::put('elections/{election}/members/order', [ElectionController::class, 'updateMembersOrder']);
     Route::delete('elections/{election}/members/{member}', [ElectionController::class, 'removeMember']);
     
     // Rotas de grupos de tokens

@@ -46,6 +46,8 @@ class Election extends Model
     public function candidates()
     {
         return $this->belongsToMany(Member::class, 'election_member')
+            ->withPivot('order')
+            ->orderBy('order')
             ->withTimestamps();
     }
 
@@ -55,6 +57,8 @@ class Election extends Model
     public function members()
     {
         return $this->belongsToMany(Member::class, 'election_member')
+            ->withPivot('order')
+            ->orderBy('order')
             ->withTimestamps();
     }
 
