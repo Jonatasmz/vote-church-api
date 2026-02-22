@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ElectionController;
 use App\Http\Controllers\Api\VoteTokenController;
 use App\Http\Controllers\Api\VoteController;
+use App\Http\Controllers\Api\MinistryController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenGroupController;
 
@@ -53,6 +54,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('token-groups/{tokenGroup}/tokens/{token}', [VoteTokenController::class, 'show']);
     Route::delete('token-groups/{tokenGroup}/tokens/{token}', [VoteTokenController::class, 'destroy']);
     
+    // Rotas de ministérios
+    Route::apiResource('ministries', MinistryController::class);
+    Route::post('ministries/{ministry}/users', [MinistryController::class, 'attachUser']);
+    Route::delete('ministries/{ministry}/users/{user}', [MinistryController::class, 'detachUser']);
+
     // Rotas de estatísticas
     Route::get('elections/{election}/statistics', [VoteController::class, 'statistics']);
 });
