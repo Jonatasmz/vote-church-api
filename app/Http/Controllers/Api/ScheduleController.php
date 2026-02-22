@@ -18,7 +18,7 @@ class ScheduleController extends Controller
         }
 
         $schedules = $query
-            ->orderByRaw("FIELD(type, 'recurring', 'single')")
+            ->orderByRaw("CASE type WHEN 'recurring' THEN 0 ELSE 1 END")
             ->orderBy('day_of_week')
             ->orderBy('date')
             ->orderBy('time')
