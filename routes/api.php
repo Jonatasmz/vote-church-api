@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ElectionController;
 use App\Http\Controllers\Api\VoteTokenController;
 use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\Api\MinistryController;
+use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenGroupController;
 
@@ -58,6 +59,9 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('ministries', MinistryController::class);
     Route::post('ministries/{ministry}/users', [MinistryController::class, 'attachUser']);
     Route::delete('ministries/{ministry}/users/{user}', [MinistryController::class, 'detachUser']);
+
+    // Rotas de programação da igreja
+    Route::apiResource('schedules', ScheduleController::class);
 
     // Rotas de estatísticas
     Route::get('elections/{election}/statistics', [VoteController::class, 'statistics']);
