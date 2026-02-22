@@ -101,13 +101,13 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        // Prevenir exclusão do próprio usuário (se tiver autenticação)
-        // if (auth()->check() && auth()->id() === $user->id) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Você não pode excluir seu próprio usuário'
-        //     ], 403);
-        // }
+        // Prevenir exclusão do próprio usuário
+        if (auth()->id() === $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Você não pode excluir seu próprio usuário'
+            ], 403);
+        }
 
         $user->delete();
 
