@@ -45,12 +45,14 @@ class OccurrenceDutyController extends Controller
         }
 
         $duty = $occurrence->duties()->create($validated);
-        $duty->load(['member', 'ministry']);
+
+        // Recarrega a ocorrência com todas as escalas para o frontend
+        $occurrence->load(['duties.member', 'duties.ministry']);
 
         return response()->json([
             'success' => true,
             'message' => 'Membro escalado com sucesso',
-            'data'    => $duty,
+            'data'    => $occurrence,
         ], 201);
     }
 
