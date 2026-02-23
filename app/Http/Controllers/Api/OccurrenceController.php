@@ -41,6 +41,7 @@ class OccurrenceController extends Controller
         }
 
         $occurrence = $schedule->occurrences()->create($validated);
+        $occurrence->load(['duties.member', 'duties.ministry']);
 
         return response()->json([
             'success' => true,
