@@ -59,8 +59,6 @@ Route::middleware('auth:api')->group(function () {
     
     // Rotas de ministérios
     Route::apiResource('ministries', MinistryController::class);
-    Route::post('ministries/{ministry}/users', [MinistryController::class, 'attachUser']);
-    Route::delete('ministries/{ministry}/users/{user}', [MinistryController::class, 'detachUser']);
     Route::post('ministries/{ministry}/members', [MinistryController::class, 'attachMember']);
     Route::delete('ministries/{ministry}/members/{member}', [MinistryController::class, 'detachMember']);
 
