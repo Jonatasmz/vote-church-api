@@ -55,6 +55,7 @@ class ScheduleController extends Controller
     {
         $request->merge([
             'ministries' => array_values(array_filter($request->input('ministries', []), fn ($v) => $v !== null)),
+            'time'       => substr($request->input('time', ''), 0, 5),
         ]);
 
         $validated = $request->validate([
@@ -89,6 +90,7 @@ class ScheduleController extends Controller
     {
         $request->merge([
             'ministries' => array_values(array_filter($request->input('ministries', []), fn ($v) => $v !== null)),
+            'time'       => substr($request->input('time', ''), 0, 5),
         ]);
 
         $validated = $request->validate([
