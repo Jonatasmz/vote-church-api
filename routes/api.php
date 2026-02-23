@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\ElectionController;
 use App\Http\Controllers\Api\VoteTokenController;
 use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\Api\MinistryController;
+use App\Http\Controllers\Api\OccurrenceController;
+use App\Http\Controllers\Api\OccurrenceDutyController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenGroupController;
@@ -59,9 +61,21 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('ministries', MinistryController::class);
     Route::post('ministries/{ministry}/users', [MinistryController::class, 'attachUser']);
     Route::delete('ministries/{ministry}/users/{user}', [MinistryController::class, 'detachUser']);
+    Route::post('ministries/{ministry}/members', [MinistryController::class, 'attachMember']);
+    Route::delete('ministries/{ministry}/members/{member}', [MinistryController::class, 'detachMember']);
 
     // Rotas de programação da igreja
     Route::apiResource('schedules', ScheduleController::class);
+
+    // Rotas de ocorrências (cultos específicos)
+    Route::get('schedules/{schedule}/occurrences', [OccurrenceController::class, 'index']);
+    Route::post('schedules/{schedule}/occurrences', [OccurrenceController::class, 'store']);
+    Route::get('schedules/{schedule}/occurrences/{occurrence}', [OccurrenceController::class, 'show']);
+    Route::delete('schedules/{schedule}/occurrences/{occurrence}', [OccurrenceController::class, 'destroy']);
+
+    // Rotas de escalas (duties) por ocorrência
+    Route::post('schedules/{schedule}/occurrences/{occurrence}/duties', [OccurrenceDutyController::class, 'store']);
+    Route::delete('schedules/{schedule}/occurrences/{occurrence}/duties/{duty}', [OccurrenceDutyController::class, 'destroy']);
 
     // Rotas de estatísticas
     Route::get('elections/{election}/statistics', [VoteController::class, 'statistics']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ministry;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -33,12 +34,14 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:100'],
-            'type'        => ['required', Rule::in(['recurring', 'single'])],
-            'time'        => ['required', 'date_format:H:i'],
-            'day_of_week' => ['required_if:type,recurring', 'nullable', 'integer', 'min:0', 'max:6'],
-            'date'        => ['required_if:type,single', 'nullable', 'date_format:Y-m-d'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'name'           => ['required', 'string', 'max:100'],
+            'type'           => ['required', Rule::in(['recurring', 'single'])],
+            'time'           => ['required', 'date_format:H:i'],
+            'day_of_week'    => ['required_if:type,recurring', 'nullable', 'integer', 'min:0', 'max:6'],
+            'date'           => ['required_if:type,single', 'nullable', 'date_format:Y-m-d'],
+            'description'    => ['nullable', 'string', 'max:255'],
+            'ministries'     => ['nullable', 'array'],
+            'ministries.*'   => ['integer', Rule::exists('ministries', 'id')->whereNull('deleted_at')],
         ]);
 
         $schedule = Schedule::create($validated);
@@ -61,12 +64,14 @@ class ScheduleController extends Controller
     public function update(Request $request, Schedule $schedule)
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:100'],
-            'type'        => ['required', Rule::in(['recurring', 'single'])],
-            'time'        => ['required', 'date_format:H:i'],
-            'day_of_week' => ['required_if:type,recurring', 'nullable', 'integer', 'min:0', 'max:6'],
-            'date'        => ['required_if:type,single', 'nullable', 'date_format:Y-m-d'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'name'           => ['required', 'string', 'max:100'],
+            'type'           => ['required', Rule::in(['recurring', 'single'])],
+            'time'           => ['required', 'date_format:H:i'],
+            'day_of_week'    => ['required_if:type,recurring', 'nullable', 'integer', 'min:0', 'max:6'],
+            'date'           => ['required_if:type,single', 'nullable', 'date_format:Y-m-d'],
+            'description'    => ['nullable', 'string', 'max:255'],
+            'ministries'     => ['nullable', 'array'],
+            'ministries.*'   => ['integer', Rule::exists('ministries', 'id')->whereNull('deleted_at')],
         ]);
 
         $schedule->update($validated);
