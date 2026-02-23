@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\Api\MinistryController;
 use App\Http\Controllers\Api\OccurrenceController;
 use App\Http\Controllers\Api\OccurrenceDutyController;
+use App\Http\Controllers\Api\MemberAreaController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenGroupController;
@@ -25,6 +26,10 @@ Route::post('tokens/validate', [VoteTokenController::class, 'validate']);
 Route::post('members/validate-cpf', [MemberController::class, 'validateCpf']);
 Route::post('vote', [VoteController::class, 'store']);
 Route::post('vote-by-cpf', [VoteController::class, 'storeByCpf']);
+
+// Área do membro (autenticação por CPF, sem JWT)
+Route::post('member-area/login', [MemberAreaController::class, 'login']);
+Route::get('member-area/my-duties', [MemberAreaController::class, 'myDuties']);
 
 // Rotas protegidas por autenticação JWT
 Route::middleware('auth:api')->group(function () {
