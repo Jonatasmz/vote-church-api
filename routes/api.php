@@ -69,6 +69,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('schedules/{schedule}/occurrences', [OccurrenceController::class, 'index']);
     Route::post('schedules/{schedule}/occurrences', [OccurrenceController::class, 'store']);
     Route::get('schedules/{schedule}/occurrences/{occurrence}', [OccurrenceController::class, 'show']);
+    Route::put('schedules/{schedule}/occurrences/{occurrence}', [OccurrenceController::class, 'update']);
     Route::delete('schedules/{schedule}/occurrences/{occurrence}', [OccurrenceController::class, 'destroy']);
 
     // Rotas de escalas (duties) por ocorrência

@@ -25,7 +25,8 @@ class OccurrenceController extends Controller
     public function store(Request $request, Schedule $schedule)
     {
         $validated = $request->validate([
-            'date' => ['required', 'date_format:Y-m-d'],
+            'date'  => ['required', 'date_format:Y-m-d'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ]);
 
         // Valida que a data bate com o dia da semana do schedule recorrente
@@ -58,6 +59,25 @@ class OccurrenceController extends Controller
 
         return response()->json([
             'success' => true,
+            'data'    => $occurrence,
+        ]);
+    }
+
+    public function update(Request $request, Schedule $schedule, Occurrence $occurrence)
+    {
+        $this->authorizeOccurrence($schedule, $occurrence);
+
+        $validated = $request->validate([
+            'date'  => ['sometimes', 'date_format:Y-m-d'],
+            'notes' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $occurrence->update($validated);
+        $occurrence->load(['duties.member', 'duties.ministry']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ocorrência atualizada com sucesso',
             'data'    => $occurrence,
         ]);
     }

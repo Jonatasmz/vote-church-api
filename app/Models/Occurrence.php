@@ -13,6 +13,7 @@ class Occurrence extends Model
     protected $fillable = [
         'schedule_id',
         'date',
+        'notes',
     ];
 
     protected $casts = [
