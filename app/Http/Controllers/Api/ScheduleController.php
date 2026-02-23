@@ -10,6 +10,25 @@ use Illuminate\Validation\Rule;
 
 class ScheduleController extends Controller
 {
+    /**
+     * Resolve o array de IDs de ministérios para objetos { id, name }.
+     */
+    private function resolveMinistries(Schedule $schedule): Schedule
+    {
+        $ids = $schedule->ministries ?? [];
+
+        if (count($ids) > 0) {
+            $schedule->ministries = Ministry::whereIn('id', $ids)
+                ->whereNull('deleted_at')
+                ->get(['id', 'name'])
+                ->toArray();
+        } else {
+            $schedule->ministries = [];
+        }
+
+        return $schedule;
+    }
+
     public function index(Request $request)
     {
         $query = Schedule::query();
@@ -23,7 +42,8 @@ class ScheduleController extends Controller
             ->orderBy('day_of_week')
             ->orderBy('date')
             ->orderBy('time')
-            ->get();
+            ->get()
+            ->map(fn (Schedule $s) => $this->resolveMinistries($s));
 
         return response()->json([
             'success' => true,
@@ -53,7 +73,7 @@ class ScheduleController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Evento criado com sucesso',
-            'data'    => $schedule,
+            'data'    => $this->resolveMinistries($schedule),
         ], 201);
     }
 
@@ -61,7 +81,7 @@ class ScheduleController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $schedule,
+            'data'    => $this->resolveMinistries($schedule),
         ]);
     }
 
@@ -87,7 +107,7 @@ class ScheduleController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Evento atualizado com sucesso',
-            'data'    => $schedule,
+            'data'    => $this->resolveMinistries($schedule),
         ]);
     }
 
