@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Ministry;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +15,7 @@ class MinistryController extends Controller
      */
     public function index()
     {
-        $ministries = Ministry::withCount('users')
+        $ministries = Ministry::withCount('members')
             ->orderBy('name')
             ->get();
 
@@ -49,7 +48,7 @@ class MinistryController extends Controller
      */
     public function show(Ministry $ministry)
     {
-        $ministry->load('users:id,name,email,permission');
+        $ministry->load('members:id,name,status');
 
         return response()->json([
             'success' => true,
@@ -85,53 +84,6 @@ class MinistryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Ministério removido com sucesso',
-        ]);
-    }
-
-    /**
-     * Attach a user to the ministry.
-     */
-    public function attachUser(Request $request, Ministry $ministry)
-    {
-        $validated = $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-        ]);
-
-        if ($ministry->users()->where('user_id', $validated['user_id'])->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usuário já pertence a este ministério',
-            ], 422);
-        }
-
-        $ministry->users()->attach($validated['user_id']);
-
-        $ministry->load('users:id,name,email,permission');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Usuário adicionado ao ministério com sucesso',
-            'data' => $ministry,
-        ]);
-    }
-
-    /**
-     * Detach a user from the ministry.
-     */
-    public function detachUser(Ministry $ministry, User $user)
-    {
-        if (! $ministry->users()->where('user_id', $user->id)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usuário não pertence a este ministério',
-            ], 422);
-        }
-
-        $ministry->users()->detach($user->id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Usuário removido do ministério com sucesso',
         ]);
     }
 
