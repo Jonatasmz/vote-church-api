@@ -33,6 +33,10 @@ class ScheduleController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'ministries' => array_values(array_filter($request->input('ministries', []), fn ($v) => $v !== null)),
+        ]);
+
         $validated = $request->validate([
             'name'           => ['required', 'string', 'max:100'],
             'type'           => ['required', Rule::in(['recurring', 'single'])],
@@ -63,6 +67,10 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
+        $request->merge([
+            'ministries' => array_values(array_filter($request->input('ministries', []), fn ($v) => $v !== null)),
+        ]);
+
         $validated = $request->validate([
             'name'           => ['required', 'string', 'max:100'],
             'type'           => ['required', Rule::in(['recurring', 'single'])],
