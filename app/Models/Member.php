@@ -49,6 +49,6 @@ class Member extends Model
 
     public function ministries()
     {
-        return $this->belongsToMany(Ministry::class)->withTimestamps();
+        return $this->belongsToMany(Ministry::class, 'ministry_member')->withTimestamps();
     }
 }
