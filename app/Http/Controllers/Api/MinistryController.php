@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Member;
 use App\Models\Ministry;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MinistryController extends Controller
 {
@@ -130,6 +132,50 @@ class MinistryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Usuário removido do ministério com sucesso',
+        ]);
+    }
+
+    /**
+     * Attach a member to the ministry.
+     */
+    public function attachMember(Request $request, Ministry $ministry)
+    {
+        $validated = $request->validate([
+            'member_id' => ['required', 'integer', Rule::exists('members', 'id')->whereNull('deleted_at')],
+        ]);
+
+        if ($ministry->members()->where('member_id', $validated['member_id'])->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Membro já pertence a este ministério',
+            ], 422);
+        }
+
+        $ministry->members()->attach($validated['member_id']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Membro adicionado ao ministério com sucesso',
+        ]);
+    }
+
+    /**
+     * Detach a member from the ministry.
+     */
+    public function detachMember(Ministry $ministry, Member $member)
+    {
+        if (! $ministry->members()->where('member_id', $member->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Membro não pertence a este ministério',
+            ], 422);
+        }
+
+        $ministry->members()->detach($member->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Membro removido do ministério com sucesso',
         ]);
     }
 }

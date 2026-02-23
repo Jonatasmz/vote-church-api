@@ -17,10 +17,17 @@ class Schedule extends Model
         'date',
         'time',
         'description',
+        'ministries',
     ];
 
     protected $casts = [
         'day_of_week' => 'integer',
-        'date' => 'date:Y-m-d',
+        'date'        => 'date:Y-m-d',
+        'ministries'  => 'array',
     ];
+
+    public function occurrences()
+    {
+        return $this->hasMany(Occurrence::class);
+    }
 }

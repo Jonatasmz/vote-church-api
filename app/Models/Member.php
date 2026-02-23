@@ -46,4 +46,9 @@ class Member extends Model
     {
         return $date->format('Y-m-d');
     }
+
+    public function ministries()
+    {
+        return $this->belongsToMany(Ministry::class)->withTimestamps();
+    }
 }
