@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Ministry;
+use App\Models\MemberMinistryRequest;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -128,6 +129,66 @@ class MinistryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Membro removido do ministério com sucesso',
+        ]);
+    }
+
+    /**
+     * Lista solicitações pendentes de entrada no ministério.
+     */
+    public function listRequests(Ministry $ministry)
+    {
+        $requests = MemberMinistryRequest::where('ministry_id', $ministry->id)
+            ->where('status', 'pending')
+            ->with('member:id,name,cpf,status')
+            ->get()
+            ->map(fn ($r) => [
+                'id'     => $r->id,
+                'member' => [
+                    'id'     => $r->member->id,
+                    'name'   => $r->member->name,
+                    'cpf'    => $r->member->cpf,
+                    'status' => $r->member->status,
+                ],
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $requests,
+        ]);
+    }
+
+    /**
+     * Aprova uma solicitação — adiciona o membro ao ministério.
+     */
+    public function approveRequest(Ministry $ministry, MemberMinistryRequest $request)
+    {
+        if ($request->ministry_id !== $ministry->id) {
+            abort(404);
+        }
+
+        $ministry->members()->syncWithoutDetaching([$request->member_id]);
+        $request->update(['status' => 'approved']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Solicitação aprovada. Membro adicionado ao ministério.',
+        ]);
+    }
+
+    /**
+     * Rejeita uma solicitação.
+     */
+    public function rejectRequest(Ministry $ministry, MemberMinistryRequest $request)
+    {
+        if ($request->ministry_id !== $ministry->id) {
+            abort(404);
+        }
+
+        $request->update(['status' => 'rejected']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Solicitação rejeitada.',
         ]);
     }
 }

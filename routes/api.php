@@ -71,6 +71,9 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('ministries', MinistryController::class);
     Route::post('ministries/{ministry}/members', [MinistryController::class, 'attachMember']);
     Route::delete('ministries/{ministry}/members/{member}', [MinistryController::class, 'detachMember']);
+    Route::get('ministries/{ministry}/requests', [MinistryController::class, 'listRequests']);
+    Route::post('ministries/{ministry}/requests/{request}/approve', [MinistryController::class, 'approveRequest']);
+    Route::post('ministries/{ministry}/requests/{request}/reject', [MinistryController::class, 'rejectRequest']);
 
     // Rotas de programação da igreja
     Route::apiResource('schedules', ScheduleController::class);
