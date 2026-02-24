@@ -30,6 +30,11 @@ Route::post('vote-by-cpf', [VoteController::class, 'storeByCpf']);
 // Área do membro (autenticação por CPF, sem JWT)
 Route::post('member-area/login', [MemberAreaController::class, 'login']);
 Route::get('member-area/my-duties', [MemberAreaController::class, 'myDuties']);
+Route::get('member-area/profile', [MemberAreaController::class, 'getProfile']);
+Route::put('member-area/profile', [MemberAreaController::class, 'updateProfile']);
+Route::get('member-area/ministries', [MemberAreaController::class, 'getMinistries']);
+Route::post('member-area/ministry-requests', [MemberAreaController::class, 'requestMinistries']);
+Route::get('member-area/events', [MemberAreaController::class, 'getEvents']);
 
 // Rotas protegidas por autenticação JWT
 Route::middleware('auth:api')->group(function () {
