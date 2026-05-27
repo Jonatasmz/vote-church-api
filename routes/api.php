@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\OccurrenceDutyController;
 use App\Http\Controllers\Api\MemberAreaController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\MemberRelationshipController;
 use App\Http\Controllers\TokenGroupController;
 
 // Rotas públicas de autenticação
@@ -29,6 +30,9 @@ Route::post('vote-by-cpf', [VoteController::class, 'storeByCpf']);
 
 // Área do membro (autenticação por CPF, sem JWT)
 Route::post('member-area/login', [MemberAreaController::class, 'login']);
+Route::post('member-area/register', [MemberAreaController::class, 'register']);
+Route::post('member-area/photo', [MemberAreaController::class, 'uploadPhoto']);
+Route::get('member-area/birthdays', [MemberAreaController::class, 'getBirthdays']);
 Route::get('member-area/my-duties', [MemberAreaController::class, 'myDuties']);
 Route::get('member-area/profile', [MemberAreaController::class, 'getProfile']);
 Route::put('member-area/profile', [MemberAreaController::class, 'updateProfile']);
@@ -47,6 +51,13 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('users', UserController::class);
     
     // Rotas de membros
+    Route::get('members/birthdays', [MemberController::class, 'birthdays']);
+    Route::post('members/{member}/photo', [MemberController::class, 'uploadPhoto']);
+    Route::post('members/{member}/approve', [MemberController::class, 'approve']);
+    Route::post('members/{member}/merge', [MemberController::class, 'merge']);
+    Route::get('members/{member}/relationships', [MemberRelationshipController::class, 'index']);
+    Route::post('members/{member}/relationships', [MemberRelationshipController::class, 'store']);
+    Route::delete('members/{member}/relationships/{relationship}', [MemberRelationshipController::class, 'destroy']);
     Route::apiResource('members', MemberController::class);
     
     // Rotas de eleições

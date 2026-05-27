@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Ministry;
+use Illuminate\Support\Facades\Storage;
 use App\Models\MemberMinistryRequest;
 use App\Models\Occurrence;
 use App\Models\OccurrenceDuty;
@@ -53,6 +54,67 @@ class MemberAreaController extends Controller
     }
 
     /**
+     * Auto-cadastro de membro pelo CPF (público, sem JWT).
+     */
+    public function register(Request $request)
+    {
+        $request->validate([
+            'cpf'         => ['required', 'string'],
+            'name'        => ['required', 'string', 'max:255'],
+            'rg'          => ['nullable', 'string', 'max:20'],
+            'birth_date'  => ['nullable', 'date'],
+            'description' => ['nullable', 'string'],
+            'photo'       => ['nullable', 'string'],
+        ]);
+
+        $cpfDigits = preg_replace('/[^0-9]/', '', $request->cpf);
+
+        if (strlen($cpfDigits) !== 11) {
+            return response()->json([
+                'success' => false,
+                'message' => 'CPF inválido.',
+            ], 422);
+        }
+
+        $exists = Member::where('cpf', $request->cpf)
+            ->orWhere('cpf', $cpfDigits)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'CPF já cadastrado. Faça login na área do membro.',
+            ], 409);
+        }
+
+        $member = Member::create([
+            'name'           => $request->name,
+            'cpf'            => $cpfDigits,
+            'rg'             => $request->rg,
+            'birth_date'     => $request->birth_date,
+            'description'    => $request->description,
+            'photo'          => $request->photo,
+            'member_since'   => now()->toDateString(),
+            'status'         => 'active',
+            'pending_review' => true,
+        ]);
+
+        $member->load('ministries:id,name');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cadastro realizado com sucesso.',
+            'data'    => [
+                'id'         => $member->id,
+                'name'       => $member->name,
+                'cpf'        => $member->cpf,
+                'photo'      => $member->photo,
+                'ministries' => $member->ministries,
+            ],
+        ], 201);
+    }
+
+    /**
      * Retorna o perfil completo do membro (para a tela de atualização cadastral).
      */
     public function getProfile(Request $request)
@@ -75,6 +137,7 @@ class MemberAreaController extends Controller
                 'name'             => $member->name,
                 'cpf'              => $member->cpf,
                 'rg'               => $member->rg,
+                'birth_date'       => $member->birth_date?->format('Y-m-d'),
                 'description'      => $member->description,
                 'member_since'     => $member->member_since?->format('Y-m-d'),
                 'photo'            => $member->photo,
@@ -94,13 +157,14 @@ class MemberAreaController extends Controller
             'member_id'   => ['required', 'integer', 'exists:members,id'],
             'name'        => ['sometimes', 'string', 'max:255'],
             'rg'          => ['sometimes', 'nullable', 'string', 'max:20'],
+            'birth_date'  => ['sometimes', 'nullable', 'date'],
             'description' => ['sometimes', 'nullable', 'string'],
             'photo'       => ['sometimes', 'nullable', 'string'],
         ]);
 
         $member = Member::findOrFail($request->member_id);
 
-        $member->update($request->only(['name', 'rg', 'description', 'photo']));
+        $member->update($request->only(['name', 'rg', 'birth_date', 'description', 'photo']));
 
         $member->load('ministries:id,name');
 
@@ -114,6 +178,66 @@ class MemberAreaController extends Controller
                 'photo'      => $member->photo,
                 'ministries' => $member->ministries,
             ],
+        ]);
+    }
+
+    /**
+     * Upload de foto via área do membro (sem JWT, exige member_id).
+     */
+    public function uploadPhoto(Request $request)
+    {
+        $request->validate([
+            'member_id' => ['required', 'integer', 'exists:members,id'],
+            'photo'     => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+        ]);
+
+        $member = Member::findOrFail($request->member_id);
+
+        if ($member->photo && str_starts_with($member->photo, '/storage/members/')) {
+            $oldPath = str_replace('/storage/', '', $member->photo);
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        $path = $request->file('photo')->store('members', 'public');
+        $url = '/storage/' . $path;
+
+        $member->update(['photo' => $url]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => ['photo' => $url],
+        ]);
+    }
+
+    /**
+     * Aniversariantes do mês (visível para área do membro).
+     */
+    public function getBirthdays(Request $request)
+    {
+        $request->validate([
+            'month' => ['nullable', 'integer', 'between:1,12'],
+        ]);
+
+        $month = (int) ($request->month ?? now()->month);
+
+        $members = Member::whereNotNull('birth_date')
+            ->whereMonth('birth_date', $month)
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->get(['id', 'name', 'photo', 'birth_date'])
+            ->sortBy(fn ($m) => $m->birth_date->format('d'))
+            ->values()
+            ->map(fn ($m) => [
+                'id'    => $m->id,
+                'name'  => $m->name,
+                'photo' => $m->photo,
+                'birth_date' => $m->birth_date->format('Y-m-d'),
+                'day'   => (int) $m->birth_date->format('d'),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $members,
         ]);
     }
 
