@@ -194,15 +194,16 @@ class MemberAreaController extends Controller
         $member = Member::findOrFail($request->member_id);
 
         $rawPhoto = $member->getRawOriginal('photo');
-        if ($rawPhoto && str_starts_with($rawPhoto, '/storage/members/')) {
-            $oldPath = str_replace('/storage/', '', $rawPhoto);
-            Storage::disk('public')->delete($oldPath);
+        if ($rawPhoto) {
+            $oldPath = ltrim(preg_replace('#^/?storage/#', '', $rawPhoto), '/');
+            if (str_starts_with($oldPath, 'members/')) {
+                Storage::disk('public')->delete($oldPath);
+            }
         }
 
         $path = $request->file('photo')->store('members', 'public');
-        $url = '/storage/' . $path;
 
-        $member->update(['photo' => $url]);
+        $member->update(['photo' => $path]);
 
         return response()->json([
             'success' => true,

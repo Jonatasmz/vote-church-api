@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Member extends Model
@@ -74,7 +75,8 @@ class Member extends Model
         if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
             return $value;
         }
-        return rtrim(config('app.url'), '/') . '/' . ltrim($value, '/');
+        $path = ltrim(preg_replace('#^/?storage/#', '', $value), '/');
+        return Storage::disk('public')->url($path);
     }
 
     public function ministries()
