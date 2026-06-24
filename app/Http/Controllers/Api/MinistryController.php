@@ -16,7 +16,11 @@ class MinistryController extends Controller
      */
     public function index()
     {
-        $ministries = Ministry::withCount('members')
+        $ministries = Ministry::withCount([
+            'members',
+            'members as active_members_count' => fn ($q) => $q->where('status', 'active')->whereNull('members.deleted_at'),
+            'memberRequests as pending_requests_count' => fn ($q) => $q->where('status', 'pending'),
+        ])
             ->orderBy('name')
             ->get();
 
