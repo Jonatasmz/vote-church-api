@@ -188,7 +188,7 @@ class MemberAreaController extends Controller
     {
         $request->validate([
             'member_id' => ['required', 'integer', 'exists:members,id'],
-            'photo'     => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'photo'     => ['required', 'file', 'mimes:jpeg,png,jpg,webp,heic,heif', 'max:8192'],
         ]);
 
         $member = Member::findOrFail($request->member_id);
