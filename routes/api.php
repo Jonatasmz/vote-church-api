@@ -102,4 +102,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Rotas de estatísticas
     Route::get('elections/{election}/statistics', [VoteController::class, 'statistics']);
+
+    // Rotas de relatórios
+    Route::get('reports/ministries', [\App\Http\Controllers\Api\ReportController::class, 'ministries']);
 });
