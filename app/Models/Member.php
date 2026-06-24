@@ -66,6 +66,17 @@ class Member extends Model
         return $date->format('Y-m-d');
     }
 
+    public function getPhotoAttribute($value)
+    {
+        if (!$value) {
+            return $value;
+        }
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+        return rtrim(config('app.url'), '/') . '/' . ltrim($value, '/');
+    }
+
     public function ministries()
     {
         return $this->belongsToMany(Ministry::class, 'ministry_member')->withTimestamps();

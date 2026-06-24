@@ -173,12 +173,13 @@ class MemberController extends Controller
     public function uploadPhoto(Request $request, Member $member)
     {
         $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'photo' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,heic,heif', 'max:8192'],
         ]);
 
         // Apagar foto anterior se for caminho local
-        if ($member->photo && str_starts_with($member->photo, '/storage/members/')) {
-            $oldPath = str_replace('/storage/', '', $member->photo);
+        $rawPhoto = $member->getRawOriginal('photo');
+        if ($rawPhoto && str_starts_with($rawPhoto, '/storage/members/')) {
+            $oldPath = str_replace('/storage/', '', $rawPhoto);
             Storage::disk('public')->delete($oldPath);
         }
 
@@ -189,7 +190,7 @@ class MemberController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => ['photo' => $url],
+            'data'    => ['photo' => $member->photo],
         ]);
     }
 
