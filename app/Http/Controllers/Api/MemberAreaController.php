@@ -318,10 +318,15 @@ class MemberAreaController extends Controller
             })->values();
 
             return [
-                'id'    => $occ->id,
-                'date'  => $occ->date->format('Y-m-d'),
-                'notes' => $occ->notes,
-                'schedule' => [
+                'id'           => $occ->id,
+                'date'         => $occ->date->format('Y-m-d'),
+                'end_date'     => $occ->end_date?->format('Y-m-d'),
+                'notes'        => $occ->notes,
+                'is_paid'      => (bool) $occ->is_paid,
+                'price'        => $occ->price,
+                'installments' => $occ->installments,
+                'info_url'     => $occ->info_url,
+                'schedule'     => [
                     'id'   => $occ->schedule->id,
                     'name' => $occ->schedule->name,
                     'type' => $occ->schedule->type,
