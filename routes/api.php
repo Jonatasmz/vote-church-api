@@ -39,6 +39,14 @@ Route::put('member-area/profile', [MemberAreaController::class, 'updateProfile']
 Route::get('member-area/ministries', [MemberAreaController::class, 'getMinistries']);
 Route::post('member-area/ministry-requests', [MemberAreaController::class, 'requestMinistries']);
 Route::get('member-area/events', [MemberAreaController::class, 'getEvents']);
+Route::post('member-area/events/{schedule}/enroll', [\App\Http\Controllers\Api\EventEnrollmentController::class, 'enroll']);
+Route::get('member-area/events/{schedule}/enrollment', [\App\Http\Controllers\Api\EventEnrollmentController::class, 'show']);
+
+// Endpoint público chamado pelo RD Station (não-membros)
+Route::post('events/{schedule}/external-checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckout']);
+
+// Webhook Stripe (membros e externos)
+Route::post('webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handle']);
 
 // Rotas protegidas por autenticação JWT
 Route::middleware('auth:api')->group(function () {
@@ -89,6 +97,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Rotas de programação da igreja
     Route::apiResource('schedules', ScheduleController::class);
+    Route::get('schedules/{schedule}/enrollments', [\App\Http\Controllers\Api\AdminEventEnrollmentController::class, 'index']);
 
     // Rotas de ocorrências (cultos específicos)
     Route::get('schedules/{schedule}/occurrences', [OccurrenceController::class, 'index']);

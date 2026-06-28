@@ -74,8 +74,15 @@ class ScheduleController extends Controller
             'is_paid'        => ['boolean'],
             'price'          => ['nullable', 'numeric', 'min:0', 'required_if:is_paid,true'],
             'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
-            'info_url'       => ['nullable', 'url', 'max:500'],
+            'info_url'          => ['nullable', 'url', 'max:500'],
+            'allow_non_members' => ['boolean'],
         ]);
+
+        if (!empty($validated['allow_non_members']) && empty($validated['info_url'])) {
+            throw ValidationException::withMessages([
+                'info_url' => 'Link com mais informações é obrigatório quando o evento é público.',
+            ]);
+        }
 
         $this->ensurePaymentAllowed($validated);
 
@@ -145,8 +152,15 @@ class ScheduleController extends Controller
             'is_paid'        => ['boolean'],
             'price'          => ['nullable', 'numeric', 'min:0', 'required_if:is_paid,true'],
             'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
-            'info_url'       => ['nullable', 'url', 'max:500'],
+            'info_url'          => ['nullable', 'url', 'max:500'],
+            'allow_non_members' => ['boolean'],
         ]);
+
+        if (!empty($validated['allow_non_members']) && empty($validated['info_url'])) {
+            throw ValidationException::withMessages([
+                'info_url' => 'Link com mais informações é obrigatório quando o evento é público.',
+            ]);
+        }
 
         $this->ensurePaymentAllowed($validated);
 

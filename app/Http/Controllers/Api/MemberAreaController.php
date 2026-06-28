@@ -292,20 +292,29 @@ class MemberAreaController extends Controller
     /**
      * Retorna as programações (ocorrências) da igreja — visão geral para todos os membros.
      */
-    public function getEvents()
+    public function getEvents(\Illuminate\Http\Request $request)
     {
+        $memberId = $request->query('member_id');
+
         $occurrences = Occurrence::where('date', '>=', now()->subDays(7)->toDateString())
             ->whereNull('deleted_at')
             ->with([
-                'schedule:id,name,type,time,end_date,is_paid,price,installments,info_url',
+                'schedule:id,name,type,time,end_date,is_paid,price,installments,info_url,allow_non_members',
                 'duties.member:id,name',
                 'duties.ministry:id,name',
             ])
             ->orderBy('date')
             ->get();
 
-        $data = $occurrences->map(function ($occ) {
-            // Agrupar duties por ministério
+        $enrollmentsByScheduleId = [];
+        if ($memberId) {
+            $enrollmentsByScheduleId = \App\Models\EventEnrollment::where('member_id', $memberId)
+                ->whereIn('schedule_id', $occurrences->pluck('schedule_id')->unique()->all())
+                ->get()
+                ->keyBy('schedule_id');
+        }
+
+        $data = $occurrences->map(function ($occ) use ($enrollmentsByScheduleId) {
             $byMinistry = $occ->duties->groupBy('ministry_id')->map(function ($duties) {
                 $ministry = $duties->first()->ministry;
                 return [
@@ -317,15 +326,23 @@ class MemberAreaController extends Controller
                 ];
             })->values();
 
+            $enr = $enrollmentsByScheduleId[$occ->schedule_id] ?? null;
+
             return [
-                'id'           => $occ->id,
-                'date'         => $occ->date->format('Y-m-d'),
-                'end_date'     => $occ->schedule->end_date?->format('Y-m-d'),
-                'notes'        => $occ->notes,
-                'is_paid'      => (bool) $occ->schedule->is_paid,
-                'price'        => $occ->schedule->price,
-                'installments' => $occ->schedule->installments,
-                'info_url'     => $occ->schedule->info_url,
+                'id'                => $occ->id,
+                'date'              => $occ->date->format('Y-m-d'),
+                'end_date'          => $occ->schedule->end_date?->format('Y-m-d'),
+                'notes'             => $occ->notes,
+                'is_paid'           => (bool) $occ->schedule->is_paid,
+                'price'             => $occ->schedule->price,
+                'installments'      => $occ->schedule->installments,
+                'info_url'          => $occ->schedule->info_url,
+                'allow_non_members' => (bool) $occ->schedule->allow_non_members,
+                'enrollment'        => $enr ? [
+                    'id'      => $enr->id,
+                    'status'  => $enr->status,
+                    'paid_at' => $enr->paid_at?->toIso8601String(),
+                ] : null,
                 'schedule'     => [
                     'id'   => $occ->schedule->id,
                     'name' => $occ->schedule->name,

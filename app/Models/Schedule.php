@@ -23,17 +23,24 @@ class Schedule extends Model
         'price',
         'installments',
         'info_url',
+        'allow_non_members',
     ];
 
     protected $casts = [
-        'day_of_week'  => 'integer',
-        'date'         => 'date:Y-m-d',
-        'end_date'     => 'date:Y-m-d',
-        'ministries'   => 'array',
-        'is_paid'      => 'boolean',
-        'price'        => 'decimal:2',
-        'installments' => 'integer',
+        'day_of_week'       => 'integer',
+        'date'              => 'date:Y-m-d',
+        'end_date'          => 'date:Y-m-d',
+        'ministries'        => 'array',
+        'is_paid'           => 'boolean',
+        'price'             => 'decimal:2',
+        'installments'      => 'integer',
+        'allow_non_members' => 'boolean',
     ];
+
+    public function enrollments()
+    {
+        return $this->hasMany(EventEnrollment::class);
+    }
 
     public function occurrences()
     {
