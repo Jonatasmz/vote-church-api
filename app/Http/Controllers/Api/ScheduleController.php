@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ministry;
+use App\Models\Occurrence;
 use App\Models\Schedule;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ScheduleController extends Controller
 {
@@ -74,13 +77,44 @@ class ScheduleController extends Controller
             'info_url'       => ['nullable', 'url', 'max:500'],
         ]);
 
+        $this->ensurePaymentAllowed($validated);
+
         $schedule = Schedule::create($validated);
+
+        if ($schedule->type === 'single') {
+            $this->createOccurrencesForRange($schedule);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Evento criado com sucesso',
             'data'    => $this->resolveMinistries($schedule),
         ], 201);
+    }
+
+    private function ensurePaymentAllowed(array $data): void
+    {
+        if (($data['type'] ?? null) === 'recurring' && !empty($data['is_paid'])) {
+            throw ValidationException::withMessages([
+                'is_paid' => 'Eventos recorrentes não suportam pagamento.',
+            ]);
+        }
+    }
+
+    private function createOccurrencesForRange(Schedule $schedule): void
+    {
+        if (!$schedule->date) {
+            return;
+        }
+        $start = Carbon::parse($schedule->date->format('Y-m-d'));
+        $end   = $schedule->end_date ? Carbon::parse($schedule->end_date->format('Y-m-d')) : $start;
+
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            Occurrence::firstOrCreate([
+                'schedule_id' => $schedule->id,
+                'date'        => $d->format('Y-m-d'),
+            ]);
+        }
     }
 
     public function show(Schedule $schedule)
@@ -113,6 +147,8 @@ class ScheduleController extends Controller
             'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
             'info_url'       => ['nullable', 'url', 'max:500'],
         ]);
+
+        $this->ensurePaymentAllowed($validated);
 
         $schedule->update($validated);
 
