@@ -196,6 +196,58 @@ class MemberController extends Controller
     }
 
     /**
+     * Lista grupos de membros suspeitos de duplicação por nome normalizado.
+     */
+    public function duplicates()
+    {
+        $normalizedNames = Member::query()
+            ->whereNull('deleted_at')
+            ->whereNotNull('name_normalized')
+            ->where('name_normalized', '!=', '')
+            ->select('name_normalized')
+            ->groupBy('name_normalized')
+            ->havingRaw('COUNT(*) > 1')
+            ->pluck('name_normalized');
+
+        if ($normalizedNames->isEmpty()) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $members = Member::query()
+            ->whereIn('name_normalized', $normalizedNames)
+            ->whereNull('deleted_at')
+            ->withCount('ministries')
+            ->orderBy('name_normalized')
+            ->orderBy('id')
+            ->get();
+
+        $groups = $members
+            ->groupBy('name_normalized')
+            ->map(fn ($items, $key) => [
+                'name_normalized' => $key,
+                'members' => $items->map(fn (Member $m) => [
+                    'id'               => $m->id,
+                    'name'             => $m->name,
+                    'cpf'              => $m->cpf,
+                    'rg'               => $m->rg,
+                    'birth_date'       => $m->birth_date?->format('Y-m-d'),
+                    'member_since'     => $m->member_since?->format('Y-m-d'),
+                    'photo'            => $m->photo,
+                    'status'           => $m->status,
+                    'pending_review'   => (bool) $m->pending_review,
+                    'ministries_count' => $m->ministries_count,
+                    'created_at'       => $m->created_at?->toIso8601String(),
+                ])->values(),
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $groups,
+        ]);
+    }
+
+    /**
      * Aprovar cadastro pendente (sem merge).
      */
     public function approve(Member $member)

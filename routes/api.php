@@ -52,6 +52,7 @@ Route::middleware('auth:api')->group(function () {
     
     // Rotas de membros
     Route::get('members/birthdays', [MemberController::class, 'birthdays']);
+    Route::get('members/duplicates', [MemberController::class, 'duplicates']);
     Route::post('members/{member}/photo', [MemberController::class, 'uploadPhoto']);
     Route::post('members/{member}/approve', [MemberController::class, 'approve']);
     Route::post('members/{member}/merge', [MemberController::class, 'merge']);
