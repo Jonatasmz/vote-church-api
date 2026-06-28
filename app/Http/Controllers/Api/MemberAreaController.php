@@ -94,7 +94,7 @@ class MemberAreaController extends Controller
             'birth_date'     => $request->birth_date,
             'description'    => $request->description,
             'photo'          => $request->photo,
-            'member_since'   => now()->toDateString(),
+            'member_since'   => null,
             'status'         => 'active',
             'pending_review' => true,
         ]);

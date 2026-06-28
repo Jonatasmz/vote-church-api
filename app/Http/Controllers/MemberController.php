@@ -278,7 +278,7 @@ class MemberController extends Controller
         DB::transaction(function () use ($source, $target) {
             // Copiar campos do source quando target estiver vazio (preserva dados do target).
             // CPF do source quase sempre vai preencher o target (regra de negócio: pessoa não tinha cpf cadastrado).
-            $fields = ['cpf', 'rg', 'description', 'photo', 'member_since'];
+            $fields = ['cpf', 'rg', 'birth_date', 'description', 'photo', 'member_since'];
             $updates = [];
             foreach ($fields as $f) {
                 if (!empty($source->{$f}) && empty($target->{$f})) {
@@ -324,6 +324,34 @@ class MemberController extends Controller
                             ->where('member_id', $source->id)
                             ->where($p['other'], $row->{$p['other']})
                             ->update(['member_id' => $target->id]);
+                    }
+                }
+            }
+
+            // member_relationships: reassociar nas duas pontas (member_id e related_member_id).
+            foreach (['member_id', 'related_member_id'] as $col) {
+                $otherCol = $col === 'member_id' ? 'related_member_id' : 'member_id';
+                $rows = DB::table('member_relationships')->where($col, $source->id)->get();
+                foreach ($rows as $row) {
+                    // Auto-referência após reassign → descarta.
+                    if ($row->{$otherCol} === $target->id) {
+                        DB::table('member_relationships')->where('id', $row->id)->delete();
+                        continue;
+                    }
+                    $memberId = $col === 'member_id' ? $target->id : $row->member_id;
+                    $relatedId = $col === 'related_member_id' ? $target->id : $row->related_member_id;
+                    $exists = DB::table('member_relationships')
+                        ->where('member_id', $memberId)
+                        ->where('related_member_id', $relatedId)
+                        ->where('relationship_type', $row->relationship_type)
+                        ->where('id', '!=', $row->id)
+                        ->exists();
+                    if ($exists) {
+                        DB::table('member_relationships')->where('id', $row->id)->delete();
+                    } else {
+                        DB::table('member_relationships')
+                            ->where('id', $row->id)
+                            ->update([$col => $target->id]);
                     }
                 }
             }
