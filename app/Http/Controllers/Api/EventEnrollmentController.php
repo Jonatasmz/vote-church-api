@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\CheckoutSessionController;
 use App\Models\EventEnrollment;
 use App\Models\Member;
 use App\Models\Schedule;
@@ -39,7 +40,7 @@ class EventEnrollmentController extends Controller
                 'message' => $existing->status === 'paid' ? 'Já inscrito e pago.' : 'Inscrição já registrada, pagamento pendente.',
                 'data'    => [
                     'enrollment'   => $this->serialize($existing),
-                    'checkout_url' => null,
+                    'checkout_url' => $existing->status === 'paid' ? null : CheckoutSessionController::checkoutUrl($existing),
                 ],
             ]);
         }
@@ -60,10 +61,10 @@ class EventEnrollmentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Inscrição registrada. Pagamento via Stripe será habilitado em breve.',
+            'message' => 'Inscrição criada. Conduza ao checkout.',
             'data'    => [
                 'enrollment'   => $this->serialize($enrollment),
-                'checkout_url' => null,
+                'checkout_url' => CheckoutSessionController::checkoutUrl($enrollment),
             ],
         ], 201);
     }

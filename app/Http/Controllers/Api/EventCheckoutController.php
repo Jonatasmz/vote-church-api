@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\CheckoutSessionController;
 use App\Models\EventEnrollment;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
@@ -63,10 +64,10 @@ class EventCheckoutController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Inscrição registrada. Pagamento via Stripe será habilitado em breve.',
+            'message' => 'Inscrição criada. Conduza ao checkout.',
             'data'    => [
                 'enrollment_id' => $enrollment->id,
-                'checkout_url'  => null,
+                'checkout_url'  => CheckoutSessionController::checkoutUrl($enrollment),
             ],
         ], 201);
     }

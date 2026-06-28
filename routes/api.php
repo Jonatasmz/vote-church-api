@@ -48,6 +48,10 @@ Route::post('events/{schedule}/external-checkout', [\App\Http\Controllers\Api\Ev
 // Webhook Stripe (membros e externos)
 Route::post('webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handle']);
 
+// Mock Stripe Checkout (público, com token HMAC)
+Route::get('checkout-sessions/{enrollment}', [\App\Http\Controllers\Api\CheckoutSessionController::class, 'show']);
+Route::post('checkout-sessions/{enrollment}/confirm', [\App\Http\Controllers\Api\CheckoutSessionController::class, 'confirm']);
+
 // Rotas protegidas por autenticação JWT
 Route::middleware('auth:api')->group(function () {
     // Auth
