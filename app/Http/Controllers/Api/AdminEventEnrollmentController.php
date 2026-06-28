@@ -41,12 +41,15 @@ class AdminEventEnrollmentController extends Controller
             'success' => true,
             'data'    => [
                 'schedule' => [
-                    'id'           => $schedule->id,
-                    'name'         => $schedule->name,
-                    'date'         => $schedule->date?->format('Y-m-d'),
-                    'end_date'     => $schedule->end_date?->format('Y-m-d'),
-                    'price'        => $schedule->price,
-                    'installments' => $schedule->installments,
+                    'id'                => $schedule->id,
+                    'name'              => $schedule->name,
+                    'date'              => $schedule->date?->format('Y-m-d'),
+                    'end_date'          => $schedule->end_date?->format('Y-m-d'),
+                    'price'             => $schedule->price,
+                    'installments'      => $schedule->installments,
+                    'is_paid'           => (bool) $schedule->is_paid,
+                    'allow_non_members' => (bool) $schedule->allow_non_members,
+                    'info_url'          => $schedule->info_url,
                 ],
                 'summary'     => $summary,
                 'enrollments' => $enrollments->map(fn (EventEnrollment $e) => [

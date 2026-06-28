@@ -44,6 +44,7 @@ Route::get('member-area/events/{schedule}/enrollment', [\App\Http\Controllers\Ap
 
 // Endpoint público chamado pelo RD Station (não-membros)
 Route::post('events/{schedule}/external-checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckout']);
+Route::get('events/{schedule}/checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckoutRedirect']);
 
 // Webhook Stripe (membros e externos)
 Route::post('webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handle']);
