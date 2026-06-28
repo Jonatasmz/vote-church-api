@@ -64,9 +64,14 @@ class ScheduleController extends Controller
             'time'           => ['required', 'date_format:H:i'],
             'day_of_week'    => ['required_if:type,recurring', 'nullable', 'integer', 'min:0', 'max:6'],
             'date'           => ['required_if:type,single', 'nullable', 'date_format:Y-m-d'],
+            'end_date'       => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
             'description'    => ['nullable', 'string', 'max:255'],
             'ministries'     => ['nullable', 'array'],
             'ministries.*'   => ['integer', Rule::exists('ministries', 'id')->whereNull('deleted_at')],
+            'is_paid'        => ['boolean'],
+            'price'          => ['nullable', 'numeric', 'min:0', 'required_if:is_paid,true'],
+            'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
+            'info_url'       => ['nullable', 'url', 'max:500'],
         ]);
 
         $schedule = Schedule::create($validated);
@@ -99,9 +104,14 @@ class ScheduleController extends Controller
             'time'           => ['required', 'date_format:H:i'],
             'day_of_week'    => ['required_if:type,recurring', 'nullable', 'integer', 'min:0', 'max:6'],
             'date'           => ['required_if:type,single', 'nullable', 'date_format:Y-m-d'],
+            'end_date'       => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
             'description'    => ['nullable', 'string', 'max:255'],
             'ministries'     => ['nullable', 'array'],
             'ministries.*'   => ['integer', Rule::exists('ministries', 'id')->whereNull('deleted_at')],
+            'is_paid'        => ['boolean'],
+            'price'          => ['nullable', 'numeric', 'min:0', 'required_if:is_paid,true'],
+            'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
+            'info_url'       => ['nullable', 'url', 'max:500'],
         ]);
 
         $schedule->update($validated);

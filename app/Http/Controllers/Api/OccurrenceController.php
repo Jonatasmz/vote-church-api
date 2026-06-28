@@ -25,13 +25,8 @@ class OccurrenceController extends Controller
     public function store(Request $request, Schedule $schedule)
     {
         $validated = $request->validate([
-            'date'         => ['required', 'date_format:Y-m-d'],
-            'end_date'     => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
-            'notes'        => ['nullable', 'string', 'max:5000'],
-            'is_paid'      => ['boolean'],
-            'price'        => ['nullable', 'numeric', 'min:0', 'required_if:is_paid,true'],
-            'installments' => ['nullable', 'integer', 'min:1', 'max:36'],
-            'info_url'     => ['nullable', 'url', 'max:500'],
+            'date'  => ['required', 'date_format:Y-m-d'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ]);
 
         // Valida que a data bate com o dia da semana do schedule recorrente
@@ -73,13 +68,8 @@ class OccurrenceController extends Controller
         $this->authorizeOccurrence($schedule, $occurrence);
 
         $validated = $request->validate([
-            'date'         => ['sometimes', 'date_format:Y-m-d'],
-            'end_date'     => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
-            'notes'        => ['nullable', 'string', 'max:5000'],
-            'is_paid'      => ['boolean'],
-            'price'        => ['nullable', 'numeric', 'min:0', 'required_if:is_paid,true'],
-            'installments' => ['nullable', 'integer', 'min:1', 'max:36'],
-            'info_url'     => ['nullable', 'url', 'max:500'],
+            'date'  => ['sometimes', 'date_format:Y-m-d'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $occurrence->update($validated);

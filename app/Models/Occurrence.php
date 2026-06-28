@@ -13,20 +13,11 @@ class Occurrence extends Model
     protected $fillable = [
         'schedule_id',
         'date',
-        'end_date',
         'notes',
-        'is_paid',
-        'price',
-        'installments',
-        'info_url',
     ];
 
     protected $casts = [
-        'date'         => 'date:Y-m-d',
-        'end_date'     => 'date:Y-m-d',
-        'is_paid'      => 'boolean',
-        'price'        => 'decimal:2',
-        'installments' => 'integer',
+        'date' => 'date:Y-m-d',
     ];
 
     public function schedule()

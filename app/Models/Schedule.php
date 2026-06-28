@@ -15,15 +15,24 @@ class Schedule extends Model
         'type',
         'day_of_week',
         'date',
+        'end_date',
         'time',
         'description',
         'ministries',
+        'is_paid',
+        'price',
+        'installments',
+        'info_url',
     ];
 
     protected $casts = [
-        'day_of_week' => 'integer',
-        'date'        => 'date:Y-m-d',
-        'ministries'  => 'array',
+        'day_of_week'  => 'integer',
+        'date'         => 'date:Y-m-d',
+        'end_date'     => 'date:Y-m-d',
+        'ministries'   => 'array',
+        'is_paid'      => 'boolean',
+        'price'        => 'decimal:2',
+        'installments' => 'integer',
     ];
 
     public function occurrences()
