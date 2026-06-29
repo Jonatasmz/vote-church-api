@@ -103,6 +103,7 @@ Route::middleware('auth:api')->group(function () {
     // Rotas de programação da igreja
     Route::apiResource('schedules', ScheduleController::class);
     Route::get('schedules/{schedule}/enrollments', [\App\Http\Controllers\Api\AdminEventEnrollmentController::class, 'index']);
+    Route::delete('schedules/{schedule}/enrollments/{enrollment}', [\App\Http\Controllers\Api\AdminEventEnrollmentController::class, 'destroy']);
 
     // Rotas de ocorrências (cultos específicos)
     Route::get('schedules/{schedule}/occurrences', [OccurrenceController::class, 'index']);

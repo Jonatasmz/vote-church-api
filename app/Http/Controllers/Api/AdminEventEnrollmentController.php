@@ -6,9 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\EventEnrollment;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class AdminEventEnrollmentController extends Controller
 {
+    public function destroy(Schedule $schedule, EventEnrollment $enrollment)
+    {
+        if ($enrollment->schedule_id !== $schedule->id) {
+            throw ValidationException::withMessages([
+                'enrollment' => 'Inscrição não pertence a este evento.',
+            ]);
+        }
+
+        $enrollment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inscrição removida.',
+        ]);
+    }
+
     /**
      * Lista inscrições de um evento + resumo.
      */
