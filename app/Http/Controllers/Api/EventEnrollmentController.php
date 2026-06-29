@@ -40,7 +40,7 @@ class EventEnrollmentController extends Controller
                 'message' => $existing->status === 'paid' ? 'Já inscrito e pago.' : 'Inscrição já registrada, pagamento pendente.',
                 'data'    => [
                     'enrollment'   => $this->serialize($existing),
-                    'checkout_url' => $existing->status === 'paid' ? null : CheckoutSessionController::checkoutUrl($existing),
+                    'checkout_url' => $existing->status === 'paid' ? null : CheckoutSessionController::checkoutPath($existing),
                 ],
             ]);
         }
@@ -64,7 +64,7 @@ class EventEnrollmentController extends Controller
             'message' => 'Inscrição criada. Conduza ao checkout.',
             'data'    => [
                 'enrollment'   => $this->serialize($enrollment),
-                'checkout_url' => CheckoutSessionController::checkoutUrl($enrollment),
+                'checkout_url' => CheckoutSessionController::checkoutPath($enrollment),
             ],
         ], 201);
     }

@@ -76,11 +76,23 @@ class CheckoutSessionController extends Controller
         ]);
     }
 
+    /**
+     * Caminho relativo do checkout. Front faz window.location.href e o browser
+     * resolve no próprio domínio — não depende de FRONTEND_URL.
+     */
+    public static function checkoutPath(EventEnrollment $enrollment): string
+    {
+        $token = self::tokenFor($enrollment);
+        return "/checkout/{$enrollment->id}?t={$token}";
+    }
+
+    /**
+     * URL absoluta — só usar quando o destino precisa ser fora (RD redirect).
+     */
     public static function checkoutUrl(EventEnrollment $enrollment): string
     {
-        $base  = config('app.frontend_url') ?: config('app.url');
-        $token = self::tokenFor($enrollment);
-        return rtrim($base, '/') . "/checkout/{$enrollment->id}?t={$token}";
+        $base = config('app.frontend_url') ?: config('app.url');
+        return rtrim($base, '/') . self::checkoutPath($enrollment);
     }
 
     public static function tokenFor(EventEnrollment $enrollment): string
