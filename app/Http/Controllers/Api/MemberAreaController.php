@@ -61,6 +61,7 @@ class MemberAreaController extends Controller
         $request->validate([
             'cpf'         => ['required', 'string'],
             'name'        => ['required', 'string', 'max:255'],
+            'email'       => ['nullable', 'email', 'max:255'],
             'rg'          => ['nullable', 'string', 'max:20'],
             'birth_date'  => ['nullable', 'date'],
             'description' => ['nullable', 'string'],
@@ -90,6 +91,7 @@ class MemberAreaController extends Controller
         $member = Member::create([
             'name'           => $request->name,
             'cpf'            => $cpfDigits,
+            'email'          => $request->email,
             'rg'             => $request->rg,
             'birth_date'     => $request->birth_date,
             'description'    => $request->description,
@@ -136,6 +138,7 @@ class MemberAreaController extends Controller
                 'id'               => $member->id,
                 'name'             => $member->name,
                 'cpf'              => $member->cpf,
+                'email'            => $member->email,
                 'rg'               => $member->rg,
                 'birth_date'       => $member->birth_date?->format('Y-m-d'),
                 'description'      => $member->description,
@@ -156,6 +159,7 @@ class MemberAreaController extends Controller
         $request->validate([
             'member_id'   => ['required', 'integer', 'exists:members,id'],
             'name'        => ['sometimes', 'string', 'max:255'],
+            'email'       => ['sometimes', 'nullable', 'email', 'max:255'],
             'rg'          => ['sometimes', 'nullable', 'string', 'max:20'],
             'birth_date'  => ['sometimes', 'nullable', 'date'],
             'description' => ['sometimes', 'nullable', 'string'],
@@ -164,7 +168,7 @@ class MemberAreaController extends Controller
 
         $member = Member::findOrFail($request->member_id);
 
-        $member->update($request->only(['name', 'rg', 'birth_date', 'description', 'photo']));
+        $member->update($request->only(['name', 'email', 'rg', 'birth_date', 'description', 'photo']));
 
         $member->load('ministries:id,name');
 

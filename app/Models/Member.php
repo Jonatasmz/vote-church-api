@@ -20,6 +20,7 @@ class Member extends Model
     protected $fillable = [
         'name',
         'cpf',
+        'email',
         'rg',
         'birth_date',
         'description',

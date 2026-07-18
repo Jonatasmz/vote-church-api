@@ -53,6 +53,7 @@ class MemberController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'cpf' => 'nullable|string|max:14',
+            'email' => 'nullable|email|max:255',
             'rg' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
             'description' => 'nullable|string',
@@ -97,6 +98,7 @@ class MemberController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'cpf' => 'nullable|string|max:14',
+            'email' => 'nullable|email|max:255',
             'rg' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
             'description' => 'nullable|string',
