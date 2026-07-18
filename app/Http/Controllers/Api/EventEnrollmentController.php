@@ -7,8 +7,8 @@ use App\Http\Controllers\Api\CheckoutSessionController;
 use App\Models\EventEnrollment;
 use App\Models\Member;
 use App\Models\Schedule;
+use App\Services\EventEnrollmentService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class EventEnrollmentController extends Controller
 {
@@ -21,43 +21,20 @@ class EventEnrollmentController extends Controller
             'member_id' => ['required', 'integer', 'exists:members,id'],
         ]);
 
-        if (!$schedule->is_paid) {
-            throw ValidationException::withMessages([
-                'schedule' => 'Este evento não é pago.',
-            ]);
-        }
-
         $member = Member::findOrFail($request->member_id);
 
-        $existing = EventEnrollment::where('schedule_id', $schedule->id)
-            ->where('member_id', $member->id)
-            ->whereIn('status', ['pending', 'paid'])
-            ->first();
+        $enrollment = EventEnrollmentService::forMember($schedule, $member);
 
-        if ($existing) {
+        if (!$enrollment->wasRecentlyCreated) {
             return response()->json([
                 'success' => true,
-                'message' => $existing->status === 'paid' ? 'Já inscrito e pago.' : 'Inscrição já registrada, pagamento pendente.',
+                'message' => $enrollment->status === 'paid' ? 'Já inscrito e pago.' : 'Inscrição já registrada, pagamento pendente.',
                 'data'    => [
-                    'enrollment'   => $this->serialize($existing),
-                    'checkout_url' => $existing->status === 'paid' ? null : CheckoutSessionController::checkoutPath($existing),
+                    'enrollment'   => $this->serialize($enrollment),
+                    'checkout_url' => $enrollment->status === 'paid' ? null : CheckoutSessionController::checkoutPath($enrollment),
                 ],
             ]);
         }
-
-        $amountCents = (int) round(((float) $schedule->price) * 100);
-
-        $enrollment = EventEnrollment::create([
-            'schedule_id'  => $schedule->id,
-            'member_id'    => $member->id,
-            'name'         => $member->name,
-            'email'        => $member->email ?? '',
-            'cpf'          => $member->cpf,
-            'phone'        => null,
-            'status'       => 'pending',
-            'source'       => 'member',
-            'amount_cents' => $amountCents,
-        ]);
 
         return response()->json([
             'success' => true,

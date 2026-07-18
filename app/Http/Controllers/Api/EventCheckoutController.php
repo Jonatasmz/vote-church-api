@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\CheckoutSessionController;
 use App\Models\EventEnrollment;
 use App\Models\Schedule;
+use App\Services\EventEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -66,42 +67,6 @@ class EventCheckoutController extends Controller
 
     private function createOrReuseEnrollment(Schedule $schedule, array $validated): EventEnrollment
     {
-        $cpfDigits = !empty($validated['cpf'])
-            ? preg_replace('/[^0-9]/', '', $validated['cpf'])
-            : null;
-
-        if ($cpfDigits) {
-            $paid = EventEnrollment::where('schedule_id', $schedule->id)
-                ->where('cpf', $cpfDigits)
-                ->where('status', 'paid')
-                ->first();
-            if ($paid) {
-                throw ValidationException::withMessages([
-                    'cpf' => 'CPF já inscrito e pago neste evento.',
-                ]);
-            }
-            $existingPending = EventEnrollment::where('schedule_id', $schedule->id)
-                ->where('cpf', $cpfDigits)
-                ->where('status', 'pending')
-                ->first();
-            if ($existingPending) {
-                return $existingPending;
-            }
-        }
-
-        $amountCents = (int) round(((float) $schedule->price) * 100);
-
-        return EventEnrollment::create([
-            'schedule_id'  => $schedule->id,
-            'member_id'    => null,
-            'name'         => $validated['name'],
-            'email'        => $validated['email'],
-            'cpf'          => $cpfDigits,
-            'phone'        => $validated['phone'] ?? null,
-            'status'       => 'pending',
-            'source'       => 'external',
-            'amount_cents' => $amountCents,
-            'metadata'     => ['origin' => 'rd-station'],
-        ]);
+        return EventEnrollmentService::forVisitor($schedule, $validated, ['origin' => 'rd-station']);
     }
 }
