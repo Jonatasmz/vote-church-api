@@ -76,6 +76,7 @@ class ScheduleController extends Controller
             'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
             'info_url'          => ['nullable', 'url', 'max:500'],
             'allow_non_members' => ['boolean'],
+            'rd_station_enabled' => ['boolean'],
         ]);
 
         if (!empty($validated['allow_non_members']) && empty($validated['info_url'])) {
@@ -83,6 +84,9 @@ class ScheduleController extends Controller
                 'info_url' => 'Link com mais informações é obrigatório quando o evento é público.',
             ]);
         }
+
+        // RD Station pressupõe visitantes: só faz sentido com allow_non_members.
+        $validated['rd_station_enabled'] = !empty($validated['allow_non_members']) && !empty($validated['rd_station_enabled']);
 
         $this->ensurePaymentAllowed($validated);
 
@@ -154,12 +158,19 @@ class ScheduleController extends Controller
             'installments'   => ['nullable', 'integer', 'min:1', 'max:36'],
             'info_url'          => ['nullable', 'url', 'max:500'],
             'allow_non_members' => ['boolean'],
+            'rd_station_enabled' => ['boolean'],
         ]);
 
         if (!empty($validated['allow_non_members']) && empty($validated['info_url'])) {
             throw ValidationException::withMessages([
                 'info_url' => 'Link com mais informações é obrigatório quando o evento é público.',
             ]);
+        }
+
+        // RD Station pressupõe visitantes: só faz sentido com allow_non_members.
+        if (array_key_exists('rd_station_enabled', $validated) || array_key_exists('allow_non_members', $validated)) {
+            $allow = $validated['allow_non_members'] ?? $schedule->allow_non_members;
+            $validated['rd_station_enabled'] = (bool) $allow && !empty($validated['rd_station_enabled']);
         }
 
         $this->ensurePaymentAllowed($validated);

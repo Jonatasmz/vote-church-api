@@ -66,6 +66,7 @@ class AdminEventEnrollmentController extends Controller
                     'installments'      => $schedule->installments,
                     'is_paid'           => (bool) $schedule->is_paid,
                     'allow_non_members' => (bool) $schedule->allow_non_members,
+                    'rd_station_enabled' => (bool) $schedule->rd_station_enabled,
                     'info_url'          => $schedule->info_url,
                 ],
                 'summary'     => $summary,

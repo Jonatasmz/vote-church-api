@@ -24,6 +24,7 @@ class Schedule extends Model
         'installments',
         'info_url',
         'allow_non_members',
+        'rd_station_enabled',
     ];
 
     protected $casts = [
@@ -35,6 +36,7 @@ class Schedule extends Model
         'price'             => 'decimal:2',
         'installments'      => 'integer',
         'allow_non_members' => 'boolean',
+        'rd_station_enabled' => 'boolean',
     ];
 
     public function enrollments()
