@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Api\CheckoutSessionController;
 use App\Models\EventEnrollment;
 use App\Models\Member;
 use App\Models\Schedule;
+use App\Services\CheckoutTokenService;
 use App\Services\EventEnrollmentService;
 use Illuminate\Http\Request;
 
@@ -31,7 +31,7 @@ class EventEnrollmentController extends Controller
                 'message' => $enrollment->status === 'paid' ? 'Já inscrito e pago.' : 'Inscrição já registrada, pagamento pendente.',
                 'data'    => [
                     'enrollment'   => $this->serialize($enrollment),
-                    'checkout_url' => $enrollment->status === 'paid' ? null : CheckoutSessionController::checkoutPath($enrollment),
+                    'checkout_url' => $enrollment->status === 'paid' ? null : CheckoutTokenService::checkoutPath($enrollment),
                 ],
             ]);
         }
@@ -41,7 +41,7 @@ class EventEnrollmentController extends Controller
             'message' => 'Inscrição criada. Conduza ao checkout.',
             'data'    => [
                 'enrollment'   => $this->serialize($enrollment),
-                'checkout_url' => CheckoutSessionController::checkoutPath($enrollment),
+                'checkout_url' => CheckoutTokenService::checkoutPath($enrollment),
             ],
         ], 201);
     }

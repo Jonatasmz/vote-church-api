@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Api\CheckoutSessionController;
 use App\Models\EventEnrollment;
 use App\Models\Schedule;
+use App\Services\CheckoutTokenService;
 use App\Services\EventEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -31,7 +31,7 @@ class EventCheckoutController extends Controller
 
         $enrollment = $this->createOrReuseEnrollment($schedule, $validated);
 
-        return redirect()->away(CheckoutSessionController::checkoutUrl($enrollment));
+        return redirect()->away(CheckoutTokenService::checkoutUrl($enrollment));
     }
 
     /**
@@ -60,7 +60,7 @@ class EventCheckoutController extends Controller
             'message' => 'Inscrição criada. Conduza ao checkout.',
             'data'    => [
                 'enrollment_id' => $enrollment->id,
-                'checkout_url'  => CheckoutSessionController::checkoutUrl($enrollment),
+                'checkout_url'  => CheckoutTokenService::checkoutUrl($enrollment),
             ],
         ], 201);
     }

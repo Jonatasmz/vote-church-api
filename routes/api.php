@@ -56,8 +56,10 @@ Route::post('events/{schedule}/public-enroll', [\App\Http\Controllers\Api\Public
 // Webhook Stripe (membros e externos)
 Route::post('webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handle']);
 
-// Mock Stripe Checkout (público, com token HMAC)
+// Checkout de evento (público, com token HMAC). Com Stripe configurado, `show`
+// devolve a URL do checkout hospedado; sem chave, cai no mock via `confirm`.
 Route::get('checkout-sessions/{enrollment}', [\App\Http\Controllers\Api\CheckoutSessionController::class, 'show']);
+Route::get('checkout-sessions/{enrollment}/status', [\App\Http\Controllers\Api\CheckoutSessionController::class, 'status']);
 Route::post('checkout-sessions/{enrollment}/confirm', [\App\Http\Controllers\Api\CheckoutSessionController::class, 'confirm']);
 
 // Rotas protegidas por autenticação JWT

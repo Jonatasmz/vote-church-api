@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\EventEnrollment;
 use App\Models\Schedule;
+use App\Services\CheckoutTokenService;
 use App\Services\EventEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -82,7 +83,7 @@ class PublicEventController extends Controller
                 'enrollment'  => $enrollment ? [
                     'status'       => $enrollment->status,
                     'checkout_url' => $enrollment->status === 'pending'
-                        ? CheckoutSessionController::checkoutPath($enrollment)
+                        ? CheckoutTokenService::checkoutPath($enrollment)
                         : null,
                 ] : null,
             ],
@@ -143,7 +144,7 @@ class PublicEventController extends Controller
             'data'    => [
                 'enrollment_id' => $enrollment->id,
                 'is_member'     => (bool) $member,
-                'checkout_url'  => CheckoutSessionController::checkoutPath($enrollment),
+                'checkout_url'  => CheckoutTokenService::checkoutPath($enrollment),
             ],
         ], 201);
     }
