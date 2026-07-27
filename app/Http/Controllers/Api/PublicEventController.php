@@ -26,7 +26,7 @@ class PublicEventController extends Controller
         return response()->json([
             'success' => true,
             'data'    => [
-                'id'                => $schedule->id,
+                'id'                => $schedule->public_id,
                 'name'              => $schedule->name,
                 'description'       => $schedule->description,
                 'date'              => $schedule->date?->format('Y-m-d'),

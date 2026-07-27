@@ -59,6 +59,7 @@ class AdminEventEnrollmentController extends Controller
             'data'    => [
                 'schedule' => [
                     'id'                => $schedule->id,
+                    'public_id'         => $schedule->public_id,
                     'name'              => $schedule->name,
                     'date'              => $schedule->date?->format('Y-m-d'),
                     'end_date'          => $schedule->end_date?->format('Y-m-d'),

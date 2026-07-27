@@ -42,15 +42,16 @@ Route::get('member-area/events', [MemberAreaController::class, 'getEvents']);
 Route::post('member-area/events/{schedule}/enroll', [\App\Http\Controllers\Api\EventEnrollmentController::class, 'enroll']);
 Route::get('member-area/events/{schedule}/enrollment', [\App\Http\Controllers\Api\EventEnrollmentController::class, 'show']);
 
-// Endpoint público chamado pelo RD Station (não-membros)
-Route::post('events/{schedule}/external-checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckout']);
-Route::get('events/{schedule}/checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckoutRedirect']);
+// Endpoint público chamado pelo RD Station (não-membros).
+// {schedule:public_id}: URL usa o token público, não o id sequencial.
+Route::post('events/{schedule:public_id}/external-checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckout']);
+Route::get('events/{schedule:public_id}/checkout', [\App\Http\Controllers\Api\EventCheckoutController::class, 'externalCheckoutRedirect']);
 
 // Landing pública do evento (membro e visitante se inscrevem na mesma tela)
-Route::get('events/{schedule}/public', [\App\Http\Controllers\Api\PublicEventController::class, 'show']);
-Route::post('events/{schedule}/identify', [\App\Http\Controllers\Api\PublicEventController::class, 'identify'])
+Route::get('events/{schedule:public_id}/public', [\App\Http\Controllers\Api\PublicEventController::class, 'show']);
+Route::post('events/{schedule:public_id}/identify', [\App\Http\Controllers\Api\PublicEventController::class, 'identify'])
     ->middleware('throttle:10,1');
-Route::post('events/{schedule}/public-enroll', [\App\Http\Controllers\Api\PublicEventController::class, 'enroll'])
+Route::post('events/{schedule:public_id}/public-enroll', [\App\Http\Controllers\Api\PublicEventController::class, 'enroll'])
     ->middleware('throttle:10,1');
 
 // Webhook Stripe (membros e externos)

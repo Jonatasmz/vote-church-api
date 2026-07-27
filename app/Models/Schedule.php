@@ -5,10 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Schedule extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /**
+     * Token aleatório usado nas URLs públicas do evento — evita expor o id
+     * sequencial e a enumeração de eventos.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Schedule $schedule) {
+            if (empty($schedule->public_id)) {
+                do {
+                    $token = Str::random(12);
+                } while (static::where('public_id', $token)->exists());
+                $schedule->public_id = $token;
+            }
+        });
+    }
 
     protected $fillable = [
         'name',
