@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Schedule extends Model
@@ -35,6 +36,7 @@ class Schedule extends Model
         'end_date',
         'time',
         'description',
+        'image',
         'ministries',
         'is_paid',
         'price',
@@ -55,6 +57,23 @@ class Schedule extends Model
         'allow_non_members' => 'boolean',
         'rd_station_enabled' => 'boolean',
     ];
+
+    /**
+     * Devolve a URL pública da imagem do evento (ou null). Aceita path do
+     * storage ou URL absoluta já gravada.
+     */
+    public function getImageAttribute($value)
+    {
+        if (! $value) {
+            return $value;
+        }
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+        $path = ltrim(preg_replace('#^/?storage/#', '', $value), '/');
+
+        return Storage::disk('public')->url($path);
+    }
 
     public function enrollments()
     {

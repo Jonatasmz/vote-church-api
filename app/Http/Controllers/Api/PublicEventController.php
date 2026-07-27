@@ -29,6 +29,7 @@ class PublicEventController extends Controller
                 'id'                => $schedule->public_id,
                 'name'              => $schedule->name,
                 'description'       => $schedule->description,
+                'image'             => $schedule->image,
                 'date'              => $schedule->date?->format('Y-m-d'),
                 'end_date'          => $schedule->end_date?->format('Y-m-d'),
                 'time'              => substr($schedule->time ?? '', 0, 5),

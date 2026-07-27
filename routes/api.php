@@ -54,6 +54,10 @@ Route::post('events/{schedule:public_id}/identify', [\App\Http\Controllers\Api\P
 Route::post('events/{schedule:public_id}/public-enroll', [\App\Http\Controllers\Api\PublicEventController::class, 'enroll'])
     ->middleware('throttle:10,1');
 
+// Analytics de navegação (público e área do membro). Fire-and-forget do front.
+Route::post('track', [\App\Http\Controllers\Api\TrackingController::class, 'store'])
+    ->middleware('throttle:120,1');
+
 // Webhook Stripe (membros e externos)
 Route::post('webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handle']);
 
@@ -112,6 +116,8 @@ Route::middleware('auth:api')->group(function () {
 
     // Rotas de programação da igreja
     Route::apiResource('schedules', ScheduleController::class);
+    Route::post('schedules/{schedule}/image', [ScheduleController::class, 'uploadImage']);
+    Route::delete('schedules/{schedule}/image', [ScheduleController::class, 'deleteImage']);
     Route::get('schedules/{schedule}/enrollments', [\App\Http\Controllers\Api\AdminEventEnrollmentController::class, 'index']);
     Route::delete('schedules/{schedule}/enrollments/{enrollment}', [\App\Http\Controllers\Api\AdminEventEnrollmentController::class, 'destroy']);
 

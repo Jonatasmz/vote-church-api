@@ -8,6 +8,7 @@ use App\Models\Occurrence;
 use App\Models\Schedule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -180,5 +181,51 @@ class ScheduleController extends Controller
             'success' => true,
             'message' => 'Evento removido com sucesso',
         ]);
+    }
+
+    /**
+     * Upload da imagem do evento (opcional). Substitui a anterior se houver.
+     */
+    public function uploadImage(Request $request, Schedule $schedule)
+    {
+        $request->validate([
+            'image' => ['required', 'file', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+        ]);
+
+        $this->deleteStoredImage($schedule);
+
+        $path = $request->file('image')->store('schedules', 'public');
+        $schedule->update(['image' => $path]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => ['image' => $schedule->image],
+        ]);
+    }
+
+    /**
+     * Remove a imagem do evento.
+     */
+    public function deleteImage(Schedule $schedule)
+    {
+        $this->deleteStoredImage($schedule);
+        $schedule->update(['image' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Imagem removida.',
+        ]);
+    }
+
+    private function deleteStoredImage(Schedule $schedule): void
+    {
+        $raw = $schedule->getRawOriginal('image');
+        if (! $raw) {
+            return;
+        }
+        $path = ltrim(preg_replace('#^/?storage/#', '', $raw), '/');
+        if (str_starts_with($path, 'schedules/')) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }
