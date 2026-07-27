@@ -100,9 +100,9 @@ class PublicEventController extends Controller
 
         $request->validate([
             'cpf'   => ['required', 'string', 'max:14'],
-            // Obrigatório só pra visitante — membro herda o nome do cadastro.
+            // name e email: obrigatoriedade depende de ser membro (ver abaixo).
             'name'  => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
         ]);
 
@@ -117,11 +117,22 @@ class PublicEventController extends Controller
         $member = EventEnrollmentService::findActiveMemberByCpf($cpfDigits);
 
         if ($member) {
+            // Membro sem e-mail no cadastro precisa informar um.
+            if (! $member->email && ! $request->filled('email')) {
+                throw ValidationException::withMessages([
+                    'email' => 'Informe um e-mail para a confirmação.',
+                ]);
+            }
             $enrollment = EventEnrollmentService::forMember($schedule, $member, $request->email);
         } else {
             if (!$request->filled('name')) {
                 throw ValidationException::withMessages([
                     'name' => 'Informe seu nome completo.',
+                ]);
+            }
+            if (!$request->filled('email')) {
+                throw ValidationException::withMessages([
+                    'email' => 'Informe seu e-mail.',
                 ]);
             }
 
