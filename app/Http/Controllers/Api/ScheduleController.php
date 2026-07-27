@@ -88,7 +88,7 @@ class ScheduleController extends Controller
         $schedule = Schedule::create($validated);
 
         if ($schedule->type === 'single') {
-            $this->createOccurrencesForRange($schedule);
+            $this->syncOccurrencesForRange($schedule);
         }
 
         return response()->json([
@@ -107,7 +107,12 @@ class ScheduleController extends Controller
         }
     }
 
-    private function createOccurrencesForRange(Schedule $schedule): void
+    /**
+     * Garante que as ocorrências do evento avulso batem com o range [date, end_date].
+     * Cria as que faltam e remove as que ficaram fora do range — mas só se não
+     * tiverem escala, pra não perder duties já montadas.
+     */
+    private function syncOccurrencesForRange(Schedule $schedule): void
     {
         if (!$schedule->date) {
             return;
@@ -115,12 +120,20 @@ class ScheduleController extends Controller
         $start = Carbon::parse($schedule->date->format('Y-m-d'));
         $end   = $schedule->end_date ? Carbon::parse($schedule->end_date->format('Y-m-d')) : $start;
 
+        $range = [];
         for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $day = $d->format('Y-m-d');
+            $range[] = $day;
             Occurrence::firstOrCreate([
                 'schedule_id' => $schedule->id,
-                'date'        => $d->format('Y-m-d'),
+                'date'        => $day,
             ]);
         }
+
+        Occurrence::where('schedule_id', $schedule->id)
+            ->whereNotIn('date', $range)
+            ->whereDoesntHave('duties')
+            ->delete();
     }
 
     public function show(Schedule $schedule)
@@ -165,6 +178,10 @@ class ScheduleController extends Controller
         $this->ensurePaymentAllowed($validated);
 
         $schedule->update($validated);
+
+        if ($schedule->type === 'single') {
+            $this->syncOccurrencesForRange($schedule);
+        }
 
         return response()->json([
             'success' => true,
