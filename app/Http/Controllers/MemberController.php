@@ -178,16 +178,24 @@ class MemberController extends Controller
             'photo' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,heic,heif', 'max:8192'],
         ]);
 
-        // Apagar foto anterior se for caminho local
+        // Grava a nova antes de apagar a antiga: se o upload falhar, a foto atual fica.
         $rawPhoto = $member->getRawOriginal('photo');
+        $path     = $request->file('photo')->store('members', 'public');
+
+        if (!$path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não foi possível salvar a foto. Tente novamente.',
+            ], 500);
+        }
+
+        // Apagar foto anterior se for caminho local
         if ($rawPhoto) {
             $oldPath = ltrim(preg_replace('#^/?storage/#', '', $rawPhoto), '/');
             if (str_starts_with($oldPath, 'members/')) {
                 Storage::disk('public')->delete($oldPath);
             }
         }
-
-        $path = $request->file('photo')->store('members', 'public');
 
         $member->update(['photo' => $path]);
 

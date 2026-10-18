@@ -197,15 +197,23 @@ class MemberAreaController extends Controller
 
         $member = Member::findOrFail($request->member_id);
 
+        // Grava a nova antes de apagar a antiga: se o upload falhar, a foto atual fica.
         $rawPhoto = $member->getRawOriginal('photo');
+        $path     = $request->file('photo')->store('members', 'public');
+
+        if (!$path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não foi possível salvar a foto. Tente novamente.',
+            ], 500);
+        }
+
         if ($rawPhoto) {
             $oldPath = ltrim(preg_replace('#^/?storage/#', '', $rawPhoto), '/');
             if (str_starts_with($oldPath, 'members/')) {
                 Storage::disk('public')->delete($oldPath);
             }
         }
-
-        $path = $request->file('photo')->store('members', 'public');
 
         $member->update(['photo' => $path]);
 

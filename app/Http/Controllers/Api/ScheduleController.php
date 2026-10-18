@@ -209,9 +209,17 @@ class ScheduleController extends Controller
             'image' => ['required', 'file', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
         ]);
 
-        $this->deleteStoredImage($schedule);
-
+        // Grava a nova antes de apagar a antiga: se o upload falhar, a imagem atual fica.
         $path = $request->file('image')->store('schedules', 'public');
+
+        if (!$path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não foi possível salvar a imagem. Tente novamente.',
+            ], 500);
+        }
+
+        $this->deleteStoredImage($schedule);
         $schedule->update(['image' => $path]);
 
         return response()->json([
