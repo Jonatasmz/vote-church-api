@@ -303,7 +303,7 @@ class MemberAreaController extends Controller
         $occurrences = Occurrence::where('date', '>=', now()->subDays(7)->toDateString())
             ->whereNull('deleted_at')
             ->with([
-                'schedule:id,public_id,name,type,time,end_date,is_paid,price,installments,info_url,allow_non_members,image',
+                'schedule:id,public_id,name,type,time,end_date,description,is_paid,price,installments,info_url,allow_non_members,image',
                 'duties.member:id,name',
                 'duties.ministry:id,name',
             ])
@@ -337,6 +337,7 @@ class MemberAreaController extends Controller
                 'date'              => $occ->date->format('Y-m-d'),
                 'end_date'          => $occ->schedule->end_date?->format('Y-m-d'),
                 'notes'             => $occ->notes,
+                'description'       => $occ->schedule->description,
                 'image'             => $occ->schedule->image,
                 'is_paid'           => (bool) $occ->schedule->is_paid,
                 'price'             => $occ->schedule->price,
